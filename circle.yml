@@ -14,4 +14,4 @@ test:
     - cat /dev/null | sbt clean coverage test
 general:
   artifacts:
-    - target/scala-2.11/scoverage-report
+    - target/*/scoverage-report
