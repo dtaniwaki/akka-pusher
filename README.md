@@ -60,6 +60,12 @@ val pusher = new PusherClient(ConfigFactory.parseString("""pusher: {appId: "app0
 sbt test
 ```
 
+### Coverage
+
+```bash
+sbt clean coverage test
+```
+
 ## Contributing
 
 1. Fork it

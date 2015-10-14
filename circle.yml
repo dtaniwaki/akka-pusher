@@ -9,3 +9,9 @@ dependencies:
     - "~/.sbt"
   override:
     - echo "N/A"
+test:
+  override:
+    - cat /dev/null | sbt clean coverage test
+general:
+  artifacts:
+    - target/scala-2.11/scoverage-report
