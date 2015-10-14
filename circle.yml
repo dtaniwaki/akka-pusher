@@ -1,0 +1,11 @@
+machine:
+  java:
+    version: oraclejdk8
+  timezone: UTC
+  environment:
+    SBT_OPTS: -Dconfig.resource=config/akka-pusher-test.conf
+dependencies:
+  cache_directories:
+    - "~/.sbt"
+  override:
+    - echo "N/A"

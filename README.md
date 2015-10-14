@@ -1,5 +1,7 @@
 # akka-pusher
 
+[![Circle CI][circle-ci-image]][circle-ci-link]
+
 Pusher Client under Akka's actor context.
 
 ## Installation
@@ -69,3 +71,6 @@ sbt test
 ## Copyright
 
 Copyright (c) 2015 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
+
+[circle-ci-image]:  https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master.png?style=badge
+[circle-ci-link]:   https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master
