@@ -27,3 +27,28 @@ libraryDependencies ++= Seq(
   "org.specs2"          %%  "specs2-matcher-extra" % specs2V % "test",
   "org.specs2"          %%  "specs2-mock"   % specs2V % "test"
 )
+
+publishArtifact in Test := false
+publishMavenStyle := true
+pomIncludeRepository := { _ => false }
+pomExtra := (
+  <url>http://github.com/dtaniwaki/akka-pusher</url>
+    <licenses>
+      <license>
+        <name>MIT</name>
+        <url>http://opensource.org/licenses/MIT</url>
+      </license>
+    </licenses>
+    <scm>
+      <connection>scm:git:github.com/dtaniwaki/akka-pusher.git</connection>
+      <developerConnection>scm:git:git@github.com:dtaniwaki/akka-pusher.git</developerConnection>
+      <url>github.com/dtaniwaki/akka-pusher</url>
+    </scm>
+    <developers>
+      <developer>
+        <id>dtaniwaki</id>
+        <name>Daisuke Taniwaki</name>
+        <url>https://github.com/dtaniwaki</url>
+      </developer>
+    </developers>
+  )
