@@ -114,13 +114,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
 
   def authenticate(channel: String, socketId: String, data: Option[Map[String, String]] = None): AuthenticatedParams = {
-    var list = List(socketId, channel)
-    var serializedData: Option[String] = None
-    data.map { data =>
-      serializedData = Some(data.toJson.toString)
-      list = list :+ signature(serializedData.get)
-    }
-    AuthenticatedParams(list.mkString(":"), serializedData)
+    data.map{ data =>
+      val serializedData = data.toJson.toString
+      val secret = s"${socketId}:${channel}:${serializedData}"
+      val list = List(key, signature(secret))
+      AuthenticatedParams(list.mkString(":"), Some(serializedData))
+    }.get
   }
 
   def validateSignature(_key: String, _signature: String, body: String): Boolean = {
