@@ -52,3 +52,5 @@ pomExtra := (
       </developer>
     </developers>
   )
+
+publishTo := Some(Resolver.file("akka-pusher", file("."))(Patterns(true, Resolver.mavenStyleBasePattern)))
