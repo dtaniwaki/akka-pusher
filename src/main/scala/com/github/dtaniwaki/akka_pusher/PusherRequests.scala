@@ -7,8 +7,7 @@ import PusherEvents.PusherEvent
 object PusherRequests {
   case class AuthRequest(
     socketId: String,
-    channelName: String,
-    accessToken: String
+    channelName: String
   )
   case class WebhookRequest(
     timeMs: DateTime,

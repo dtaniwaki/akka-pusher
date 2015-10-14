@@ -36,7 +36,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
-  implicit val AuthRequestJsonSupport = jsonFormat(AuthRequest.apply, "socket_id", "channel_name", "accessToken")
+  implicit val AuthRequestJsonSupport = jsonFormat(AuthRequest.apply, "socket_id", "channel_name")
   implicit object WebhookRequestJsonSupport extends RootJsonFormat[WebhookRequest] {
     def write(res: WebhookRequest): JsValue = {
       res.toJson
