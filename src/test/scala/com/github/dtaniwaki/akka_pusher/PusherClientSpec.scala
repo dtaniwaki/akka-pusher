@@ -95,13 +95,13 @@ class PusherClientSpec extends Specification
   // }
   "#authenticate" should {
     "return an authenticatedParams" in {
-      val res = pusher.authenticate("GET", "123.234", Some(Map("foo" -> "bar")))
-      res === AuthenticatedParams("123.234:GET:3f3ab3986b656abb17af3eb1443ed6c08ef8fff9fea83915909d1b421aec89be", Some("""{"foo":"bar"}"""))
+      val res = pusher.authenticate("channel", "123.234", Some(Map("foo" -> "bar")))
+      res === AuthenticatedParams("key:89728bf2c4f1c2ba483805632d85848f6cb350777a00632ec45958c616978414", Some("""{"foo":"bar"}"""))
     }
-    "without data" should {
+    "without data" in {
       "return an authenticatedParams" in {
-        val res = pusher.authenticate("GET", "123.234")
-        res === AuthenticatedParams("123.234:GET", None)
+        val res = pusher.authenticate("channel", "123.234")
+        res === AuthenticatedParams("key:2e3527935cd952830573d54a9199cfac42d5aace747bf301c5517d2da8ef7c38", None)
       }
     }
   }

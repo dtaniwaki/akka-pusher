@@ -69,7 +69,7 @@ class PusherActorSpec extends Specification
       "returns ResponseMessage with AuthenticatedParams" in {
         val actorRef = system.actorOf(PusherActor.props)
         val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(Map("foo" -> "bar")))
-        awaitResult(future) === ResponseMessage(AuthenticatedParams("123.234:GET:3f3ab3986b656abb17af3eb1443ed6c08ef8fff9fea83915909d1b421aec89be", Some("""{"foo":"bar"}""")))
+        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:ea737f47cb5f96df1717289fd9bf6a2588e44265dcf2504321308b22f618bb39", Some("""{"foo":"bar"}""")))
       }
     }
     "with ValidateSignatureMessage" should {
