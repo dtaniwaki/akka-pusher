@@ -68,8 +68,18 @@ class PusherActorSpec extends Specification
     "with AuthenticateMessage" should {
       "returns ResponseMessage with AuthenticatedParams" in {
         val actorRef = system.actorOf(PusherActor.props)
-        val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(Map("foo" -> "bar")))
-        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:ea737f47cb5f96df1717289fd9bf6a2588e44265dcf2504321308b22f618bb39", Some("""{"foo":"bar"}""")))
+        val channelData = ChannelData(
+          userId = "test_user",
+          userInfo = Some(Map("foo" -> "bar"))
+        )
+        val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
+        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5e76b03a1e16bda68b183aef8ca71fb2fad9773eae977ff3912bca2ec2d3a7e0", Some("""{"user_id":"test_user","user_info":{"foo":"bar"}}""")))
+      }
+      "returns ResponseMessage with AuthenticatedParams, userInfo not included" in {
+        val actorRef = system.actorOf(PusherActor.props)
+        val channelData = ChannelData("test_user")
+        val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
+        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}""")))
       }
     }
     "with ValidateSignatureMessage" should {

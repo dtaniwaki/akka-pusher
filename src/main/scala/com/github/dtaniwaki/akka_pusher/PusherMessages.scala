@@ -1,5 +1,7 @@
 package com.github.dtaniwaki.akka_pusher
 
+import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
+
 object PusherMessages {
   case class TriggerMessage(
     channel: String,
@@ -21,7 +23,7 @@ object PusherMessages {
   case class AuthenticateMessage(
     socketId: String,
     channel: String,
-    data: Option[Map[String, String]] = None
+    data: Option[ChannelData] = None
   )
   case class ValidateSignatureMessage(
     key: String,

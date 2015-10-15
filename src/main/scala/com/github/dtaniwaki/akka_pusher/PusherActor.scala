@@ -1,11 +1,10 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
+import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-import PusherMessages._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class PusherActor extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
