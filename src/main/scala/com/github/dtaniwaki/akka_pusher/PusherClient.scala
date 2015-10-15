@@ -37,15 +37,19 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     false
 
   implicit val materializer = ActorMaterializer()
-  val pool = if (ssl)
+  private val pool = if (ssl)
     Http(system).cachedHostConnectionPoolTls[Int](host)
   else
-    Http(system).newHostConnectionPool[Int](host)
+    Http(system).cachedHostConnectionPool[Int](host)
+  private val scheme = if (ssl)
+    "https"
+  else
+    "http"
 
   def trigger(event: String, channel: String, message: String, socketId: Option[String] = None): Future[Result] = {
     validateChannel(channel)
     socketId.map(validateSocketId)
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/events"))
+    var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
     val data = Map(
       "data" -> Some(Map("message" -> message).toJson.toString),
@@ -55,12 +59,13 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     ).filter(_._2.isDefined).mapValues(_.get)
 
     uri = signUri("POST", uri, Some(data))
+
     request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.toString))).map{ new Result(_) }
   }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
     validateChannel(channel)
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/$channel"))
+    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels/$channel"))
 
     val params = Map(
       "info" -> attributes.map(_.mkString(","))
@@ -72,7 +77,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
 
   def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Channels] = {
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels"))
+    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels"))
 
     val params = Map(
       "filter_by_prefix" -> Some(prefixFilter),
@@ -86,7 +91,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def users(channel: String): Future[Users] = {
     validateChannel(channel)
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/$channel/users"))
+    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels/$channel/users"))
     uri = signUri("GET", uri)
 
     request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
@@ -100,6 +105,33 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def validateSignature(_key: String, _signature: String, body: String): Boolean = {
     key == _key && signature(body) == _signature
+  }
+
+  def request(req: HttpRequest): Future[String] = {
+    Source.single(req, 0)
+    .via(pool)
+    .runWith(Sink.head)
+    .flatMap {
+      case (Success(response), _) =>
+        response.entity.withContentType(ContentTypes.`application/json`)
+        .toStrict(5 seconds)
+        .map(_.data.decodeString(response.entity.contentType.charset.value))
+        .map { body =>
+          response.status match {
+            case StatusCodes.OK => body
+            case StatusCodes.BadRequest => throw new BadRequest(body)
+            case StatusCodes.Unauthorized => throw new Unauthorized(body)
+            case StatusCodes.Forbidden => throw new Forbidden(body)
+            case _ => throw new PusherException(body)
+          }
+        }
+      case _ =>
+        throw new PusherException("Pusher request failed")
+    }
+  }
+
+  private def generateUri(path: Uri.Path): Uri = {
+    Uri(scheme = scheme, authority = Uri.Authority(Uri.Host(host)), path = path)
   }
 
   private def signUri(method: String, uri: Uri, data: Option[Map[String, String]] = None): Uri = {
@@ -121,26 +153,5 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   private def signature(value: String): String = {
     sha256(secret, value)
-  }
-
-  def request(req: HttpRequest): Future[String] = {
-    Source.single(req, 0)
-    .via(pool).runWith(Sink.head).flatMap {
-      case (Success(resp: HttpResponse), _) =>
-        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map { body: String =>
-          resp.status match {
-            case StatusCodes.OK => body
-            case StatusCodes.BadRequest => throw new BadRequest(body)
-            case StatusCodes.Unauthorized => throw new Unauthorized(body)
-            case StatusCodes.Forbidden => throw new Forbidden(body)
-            case _   => throw new PusherException(body)
-          }
-        }
-      case _ => throw new PusherException("Pusher request failed")
-    }
-  }
-
-  def shutdown() = {
-    system.shutdown()
   }
 }
