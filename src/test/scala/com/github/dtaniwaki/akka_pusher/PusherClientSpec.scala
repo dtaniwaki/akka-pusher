@@ -144,9 +144,12 @@ class PusherClientSpec extends Specification
   "#authenticate" should {
     "return an authenticatedParams" in {
       val pusher = spy(new PusherClient())
-
-      val res = pusher.authenticate("channel", "123.234", Some(Map("foo" -> "bar")))
-      res === AuthenticatedParams("key:89728bf2c4f1c2ba483805632d85848f6cb350777a00632ec45958c616978414", Some("""{"foo":"bar"}"""))
+      val channelData = PresenceChannelData(
+        userId = "test user",
+        userInfo = Some(Map("foo" -> "bar"))
+      )
+      val res = pusher.authenticate("GET", "123.234", Some(channelData))
+      res === AuthenticatedParams("key:b5c954ab1e7b8da2fb91ccfd3b1ceb18465d9eedb3f5782dc909c584e656d791", Some("""{"user_id":"test user","user_info":{"foo":"bar"}}"""))
     }
     "without data" in {
       "return an authenticatedParams" in {

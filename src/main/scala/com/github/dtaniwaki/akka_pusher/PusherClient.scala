@@ -44,7 +44,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def trigger(event: String, channel: String, message: String, socketId: Option[String] = None): Future[Result] = {
     validateChannel(channel)
-    socketId.map(validateSocketId(_))
+    socketId.map(validateSocketId)
     var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/events"))
 
     val data = Map(
@@ -60,7 +60,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
     validateChannel(channel)
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/${channel}"))
+    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/$channel"))
 
     val params = Map(
       "info" -> attributes.map(_.mkString(","))
@@ -86,22 +86,16 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def users(channel: String): Future[Users] = {
     validateChannel(channel)
-    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/${channel}/users"))
+    var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/$channel/users"))
     uri = signUri("GET", uri)
 
     request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
   }
 
-  def authenticate(channel: String, socketId: String, data: Option[Map[String, String]] = None): AuthenticatedParams = {
-    var list = List(socketId, channel)
-    var serializedData: Option[String] = None
-    var signingStrings = List(socketId, channel)
-    data.map { data =>
-      val _serializedData = data.toJson.toString
-      signingStrings = signingStrings :+ _serializedData
-      serializedData = Some(_serializedData)
-    }
-    AuthenticatedParams(s"${key}:${signature(signingStrings.mkString(":"))}", serializedData)
+  def authenticate(channel: String, socketId: String, data: Option[PresenceChannelData] = None): AuthenticatedParams = {
+    val serializedData = data.map(_.toJson.compactPrint)
+    val signingStrings = serializedData.foldLeft(List(socketId, channel))(_ :+ _)
+    AuthenticatedParams(s"$key:${signature(signingStrings.mkString(":"))}", serializedData)
   }
 
   def validateSignature(_key: String, _signature: String, body: String): Boolean = {
@@ -119,7 +113,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       val serializedData = data.get.toJson.toString
       params = params :+ ("body_md5", md5(serializedData))
     }
-    signedUri = signedUri.withQuery((params ++ uri.query.toList): _*)
+    signedUri = signedUri.withQuery(params ++ uri.query.toList: _*)
 
     val signingString = s"$method\n${uri.path}\n${signedUri.query.toString}"
     signedUri.withQuery(signedUri.query.toList :+ ("auth_signature", signature(signingString)): _*)

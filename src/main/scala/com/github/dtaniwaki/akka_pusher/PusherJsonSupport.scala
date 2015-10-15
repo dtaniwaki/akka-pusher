@@ -36,6 +36,28 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
+  implicit object ChannelDataJsonSupport extends RootJsonFormat[PresenceChannelData] {
+    override def write(data: PresenceChannelData): JsValue =
+      data.userInfo.map { userInfo =>
+        JsObject(
+          "user_id" -> JsString(data.userId),
+          "user_info" -> userInfo.toJson
+        )
+      }.getOrElse(
+        JsObject("user_id" -> JsString(data.userId))
+      )
+
+
+    override def read(json: JsValue): PresenceChannelData =
+      json.asJsObject.getFields("user_id", "user_info") match {
+        case Seq(JsString(userId), userInfo) =>
+          PresenceChannelData(userId, Some(userInfo.convertTo[Map[String, String]]))
+        case Seq(JsString(userId), JsNull) =>
+          PresenceChannelData(userId, None)
+        case x => deserializationError("ChannelData is expected: " + x)
+      }
+  }
+
   implicit val AuthRequestJsonSupport = jsonFormat(AuthRequest.apply, "socket_id", "channel_name")
   implicit object WebhookRequestJsonSupport extends RootJsonFormat[WebhookRequest] {
     def write(res: WebhookRequest): JsValue = {

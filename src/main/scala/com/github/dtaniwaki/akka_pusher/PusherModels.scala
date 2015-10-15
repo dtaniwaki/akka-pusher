@@ -17,4 +17,14 @@ object PusherModels {
     auth: String,
     channelData: Option[String] = None
   )
+  case class PresenceChannelData(
+    /**
+     * unique identifier for that user
+     */
+    userId: String,
+    /**
+     * optional set of identifying information
+     */
+    userInfo: Option[Map[String, String]] = None
+  )
 }
