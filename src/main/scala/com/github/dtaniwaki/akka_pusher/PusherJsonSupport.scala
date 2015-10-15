@@ -36,8 +36,8 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
-  implicit object ChannelDataJsonSupport extends RootJsonFormat[PresenceChannelData] {
-    override def write(data: PresenceChannelData): JsValue =
+  implicit object ChannelDataJsonSupport extends RootJsonFormat[ChannelData] {
+    override def write(data: ChannelData): JsValue =
       data.userInfo.map { userInfo =>
         JsObject(
           "user_id" -> JsString(data.userId),
@@ -48,12 +48,12 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
       )
 
 
-    override def read(json: JsValue): PresenceChannelData =
+    override def read(json: JsValue): ChannelData =
       json.asJsObject.getFields("user_id", "user_info") match {
         case Seq(JsString(userId), userInfo) =>
-          PresenceChannelData(userId, Some(userInfo.convertTo[Map[String, String]]))
+          ChannelData(userId, Some(userInfo.convertTo[Map[String, String]]))
         case Seq(JsString(userId), JsNull) =>
-          PresenceChannelData(userId, None)
+          ChannelData(userId, None)
         case x => deserializationError("ChannelData is expected: " + x)
       }
   }

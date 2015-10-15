@@ -17,7 +17,7 @@ object PusherModels {
     auth: String,
     channelData: Option[String] = None
   )
-  case class PresenceChannelData(
+  case class ChannelData(
     /**
      * unique identifier for that user
      */

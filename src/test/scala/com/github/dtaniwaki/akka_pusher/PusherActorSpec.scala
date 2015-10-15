@@ -68,7 +68,7 @@ class PusherActorSpec extends Specification
     "with AuthenticateMessage" should {
       "returns ResponseMessage with AuthenticatedParams" in {
         val actorRef = system.actorOf(PusherActor.props)
-        val channelData = PresenceChannelData(
+        val channelData = ChannelData(
           userId = "test_user",
           userInfo = Some(Map("foo" -> "bar"))
         )
@@ -77,7 +77,7 @@ class PusherActorSpec extends Specification
       }
       "returns ResponseMessage with AuthenticatedParams, userInfo not included" in {
         val actorRef = system.actorOf(PusherActor.props)
-        val channelData = PresenceChannelData("test_user")
+        val channelData = ChannelData("test_user")
         val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
         awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}""")))
       }

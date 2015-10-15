@@ -92,7 +92,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
   }
 
-  def authenticate(channel: String, socketId: String, data: Option[PresenceChannelData] = None): AuthenticatedParams = {
+  def authenticate(channel: String, socketId: String, data: Option[ChannelData] = None): AuthenticatedParams = {
     val serializedData = data.map(_.toJson.compactPrint)
     val signingStrings = serializedData.foldLeft(List(socketId, channel))(_ :+ _)
     AuthenticatedParams(s"$key:${signature(signingStrings.mkString(":"))}", serializedData)
