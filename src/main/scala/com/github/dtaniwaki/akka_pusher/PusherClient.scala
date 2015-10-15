@@ -10,12 +10,12 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.{ Source, Flow, Sink }
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.HttpProtocols._
+import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.HttpsContext
-import HttpMethods._
-import HttpProtocols._
-import MediaTypes._
 import com.typesafe.config.{ConfigFactory, Config}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -37,7 +37,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     false
 
   implicit val materializer = ActorMaterializer()
-  lazy val pool = if (ssl)
+  val pool = if (ssl)
     Http(system).cachedHostConnectionPoolTls[Int](host)
   else
     Http(system).newHostConnectionPool[Int](host)
@@ -55,13 +55,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     ).filter(_._2.isDefined).mapValues(_.get)
 
     uri = signUri("POST", uri, Some(data))
-
-    Source.single(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.toString)), 0)
-    .via(pool).runWith(Sink.head).flatMap {
-      case (Success(resp), _) =>
-        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map{ new Result(_) }
-      case _ => throw new PusherException("Pusher request failed")
-    }
+    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.toString))).map{ new Result(_) }
   }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
@@ -74,12 +68,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    Source.single(HttpRequest(method = GET, uri = uri.toString), 0)
-    .via(pool).runWith(Sink.head).flatMap {
-      case (Success(resp), _) =>
-        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map{ new Channel(_) }
-      case _ => throw new PusherException("Pusher request failed")
-    }
+    request(HttpRequest(method = GET, uri = uri.toString)).map{ new  Channel(_) }
   }
 
   def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Channels] = {
@@ -92,12 +81,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    Source.single(HttpRequest(method = GET, uri = uri.toString), 0)
-    .via(pool).runWith(Sink.head).flatMap {
-      case (Success(resp), _) =>
-        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map{ new Channels(_) }
-      case _ => throw new PusherException("Pusher request failed")
-    }
+    request(HttpRequest(method = GET, uri = uri.toString)).map{ new Channels(_) }
   }
 
   def users(channel: String): Future[Users] = {
@@ -105,12 +89,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     var uri = Uri(authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(s"/apps/$appId/channels/${channel}/users"))
     uri = signUri("GET", uri)
 
-    Source.single(HttpRequest(method = GET, uri = uri.toString), 0)
-    .via(pool).runWith(Sink.head).flatMap {
-      case (Success(resp), _) =>
-        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map{ new Users(_) }
-      case _ => throw new PusherException("Pusher request failed")
-    }
+    request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
   }
 
   def authenticate(channel: String, socketId: String, data: Option[Map[String, String]] = None): AuthenticatedParams = {
@@ -133,7 +112,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     var signedUri = uri
     var params = List(
       ("auth_key", key),
-      ("auth_timestamp", (System.currentTimeMillis() / 1000).toString),
+      ("auth_timestamp", (System.currentTimeMillis / 1000).toString),
       ("auth_version", "1.0")
     )
     if (data.isDefined) {
@@ -148,6 +127,23 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   private def signature(value: String): String = {
     sha256(secret, value)
+  }
+
+  def request(req: HttpRequest): Future[String] = {
+    Source.single(req, 0)
+    .via(pool).runWith(Sink.head).flatMap {
+      case (Success(resp: HttpResponse), _) =>
+        resp.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8")).map { body: String =>
+          resp.status match {
+            case StatusCodes.OK => body
+            case StatusCodes.BadRequest => throw new BadRequest(body)
+            case StatusCodes.Unauthorized => throw new Unauthorized(body)
+            case StatusCodes.Forbidden => throw new Forbidden(body)
+            case _   => throw new PusherException(body)
+          }
+        }
+      case _ => throw new PusherException("Pusher request failed")
+    }
   }
 
   def shutdown() = {
