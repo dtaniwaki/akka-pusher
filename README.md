@@ -9,8 +9,10 @@ Pusher Client under Akka's actor context.
 Add the following to your sbt build (Scala 2.11.x):
 
 ```scala
-libraryDependencies += "com.github.dtaniwaki" %% "akka-pusher" % "0.0.1"
+libraryDependencies += "com.github.dtaniwaki" %% "akka-pusher" % "x.y.z"
 ```
+
+Here, `x.y.z` is the akka-pusher package version you want to use.
 
 ## Usage
 
