@@ -1,6 +1,6 @@
 package com.github.dtaniwaki.akka_pusher
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import akka.pattern.ask
 import akka.util.Timeout
@@ -15,6 +15,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import PusherModels._
 import PusherMessages._
 
+class TestActor(_pusher: PusherClient) extends PusherActor {
+  override val pusher = _pusher
+}
+
 class PusherActorSpec extends Specification
   with RandomSequentialExecution
   with Mockito
@@ -25,47 +29,47 @@ class PusherActorSpec extends Specification
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
 
   "#receive" should {
-    // "with TriggerMessage" should {
-    //   "returns ResponseMessage with Result" in {
-    //     val actorRef = system.actorOf(PusherActor.props)
-    //     val pusherStub = mock[PusherClient]
-    //     pusherStub.trigger("event", "channel", "message", Some("123.234")) returns Future(Result(""))
-    //
-    //     val future = actorRef ? TriggerMessage("event", "channel", "message", Some("123.234"))
-    //     awaitResult(future) === ResponseMessage(Result(""))
-    //   }
-    // }
-    // "with ChannelMessage" should {
-    //   "returns ResponseMessage with Channel" in {
-    //     val actorRef = system.actorOf(PusherActor.props)
-    //     val pusherStub = mock[PusherClient]
-    //     pusherStub.channel("channel", Some(Seq("attr1", "attr2"))) returns Future(Channel(""))
-    //
-    //     val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
-    //     awaitResult(future) === ResponseMessage(Channel(""))
-    //   }
-    // }
-    // "with ChannelsMessage" should {
-    //   "returns ResponseMessage with Channels" in {
-    //     val actorRef = system.actorOf(PusherActor.props)
-    //     val pusherStub = mock[PusherClient]
-    //     pusherStub.channels("prefix", Some(Seq("attr1", "attr2"))) returns Future(Channels(""))
-    //
-    //     val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
-    //     awaitResult(future) === ResponseMessage(Channels(""))
-    //   }
-    // }
-    // "with UsersMessage" should {
-    //   "returns ResponseMessage with Users" in {
-    //     val actorRef = system.actorOf(PusherActor.props)
-    //     val pusherStub = mock[PusherClient]
-    //     pusherStub.users("channel") returns Future(Users(""))
-    //
-    //     val future = actorRef ? UsersMessage("channel")
-    //     awaitResult(future) === ResponseMessage(Users(""))
-    //   }
-    // }
-    "with AuthenticateMessage" should {
+    "with TriggerMessage" in {
+      "returns ResponseMessage with Result" in {
+        val pusher = mock[PusherClient].smart
+        pusher.trigger(anyString, anyString, anyString, any) returns Future(Result(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? TriggerMessage("event", "channel", "message", Some("123.234"))
+        awaitResult(future) === ResponseMessage(Result(""))
+      }
+    }
+    "with ChannelMessage" in {
+      "returns ResponseMessage with Channel" in {
+        val pusher = mock[PusherClient].smart
+        pusher.channel(anyString, any) returns Future(Channel(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
+        awaitResult(future) === ResponseMessage(Channel(""))
+      }
+    }
+    "with ChannelsMessage" in {
+      "returns ResponseMessage with Channels" in {
+        val pusher = mock[PusherClient].smart
+        pusher.channels(anyString, any) returns Future(Channels(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
+        awaitResult(future) === ResponseMessage(Channels(""))
+      }
+    }
+    "with UsersMessage" in {
+      "returns ResponseMessage with Users" in {
+        val pusher = mock[PusherClient].smart
+        pusher.users(anyString) returns Future(Users(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? UsersMessage("channel")
+        awaitResult(future) === ResponseMessage(Users(""))
+      }
+    }
+    "with AuthenticateMessage" in {
       "returns ResponseMessage with AuthenticatedParams" in {
         val actorRef = system.actorOf(PusherActor.props)
         val channelData = ChannelData(
@@ -82,7 +86,7 @@ class PusherActorSpec extends Specification
         awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}""")))
       }
     }
-    "with ValidateSignatureMessage" should {
+    "with ValidateSignatureMessage" in {
       "returns ResponseMessage with Boolean" in {
         val actorRef = system.actorOf(PusherActor.props)
         val future = actorRef ? ValidateSignatureMessage("key", "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4", "foo")

@@ -1,6 +1,8 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
+import scala.concurrent.{ Future, Await, Awaitable }
+import scala.concurrent.duration._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
 
@@ -12,20 +14,20 @@ class PusherActor extends Actor with StrictLogging {
   val pusher = new PusherClient()
 
   override def receive: Receive = {
-      case TriggerMessage(event, channel, message, socketId) =>
-        pusher.trigger(event, channel, message, socketId).map(sender ! new ResponseMessage(_))
-      case ChannelMessage(channel, attributes) =>
-        pusher.channel(channel, attributes).map(sender ! new ResponseMessage(_))
-      case ChannelsMessage(prefixFilter, attributes) =>
-        pusher.channels(prefixFilter, attributes).map(sender ! new ResponseMessage(_))
-      case UsersMessage(channel) =>
-        pusher.users(channel).map(sender ! new ResponseMessage(_))
-      case AuthenticateMessage(channel, socketId, data) =>
-        sender ! new ResponseMessage(pusher.authenticate(channel, socketId, data))
-      case ValidateSignatureMessage(key, signature, body) =>
-        sender ! new ResponseMessage(pusher.validateSignature(key, signature, body))
-      case message =>
-        logger.info(s"Unknown event: $message")
+    case TriggerMessage(event, channel, message, socketId) =>
+      sender ! new ResponseMessage(Await.result(pusher.trigger(event, channel, message, socketId), 5 seconds))
+    case ChannelMessage(channel, attributes) =>
+      sender ! new ResponseMessage(Await.result(pusher.channel(channel, attributes), 5 seconds))
+    case ChannelsMessage(prefixFilter, attributes) =>
+      sender ! new ResponseMessage(Await.result(pusher.channels(prefixFilter, attributes), 5 seconds))
+    case UsersMessage(channel) =>
+      sender ! new ResponseMessage(Await.result(pusher.users(channel), 5 seconds))
+    case AuthenticateMessage(channel, socketId, data) =>
+      sender ! new ResponseMessage(pusher.authenticate(channel, socketId, data))
+    case ValidateSignatureMessage(key, signature, body) =>
+      sender ! new ResponseMessage(pusher.validateSignature(key, signature, body))
+    case message =>
+      logger.info(s"Unknown event: $message")
   }
 }
 
