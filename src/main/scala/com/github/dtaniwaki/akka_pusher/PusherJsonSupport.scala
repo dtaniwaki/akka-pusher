@@ -26,13 +26,21 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
   implicit val MemberRemovedEventJsonSupport = jsonFormat(MemberRemovedEvent.apply, "name", "channel", "user_id")
 
   implicit object ClientEventJsonSupport extends RootJsonFormat[ClientEvent] {
-    def write(res: ClientEvent): JsValue = {
-      res.toJson // FIXME: Map to the correct name
+    def write(event: ClientEvent): JsValue = {
+      JsObject(
+        "name" -> JsString(event.name),
+        "channel" -> JsString(event.channel),
+        "user_id" -> JsString(event.userId),
+        "event" -> JsString(event.event),
+        "data" -> event.data.toJson,
+        "socket_id" -> JsString(event.socketId)
+      )
     }
     def read(json: JsValue): ClientEvent = {
-      val event = json.convertTo[Map[String, String]]
-      val data = event.getOrElse("data", "{}").toJson.convertTo[Map[String, String]]
-      ClientEvent(event.getOrElse("name", ""), event.getOrElse("channel", ""), event.getOrElse("user_id", ""), event.getOrElse("event", ""), data, event.getOrElse("socket_id", ""))
+      json.asJsObject.getFields("name", "channel", "user_id", "event", "data", "socket_id") match {
+        case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), data, JsString(socketId)) =>
+          ClientEvent(name, channel, userId, event, data.convertTo[Map[String, String]], socketId)
+      }
     }
   }
 
@@ -61,19 +69,31 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
   implicit val AuthRequestJsonSupport = jsonFormat(AuthRequest.apply, "socket_id", "channel_name")
   implicit object WebhookRequestJsonSupport extends RootJsonFormat[WebhookRequest] {
     def write(res: WebhookRequest): JsValue = {
-      res.toJson
+      val events = res.events.map {
+        case event: ChannelOccupiedEvent => event.toJson
+        case event: ChannelVacatedEvent => event.toJson
+        case event: MemberAddedEvent => event.toJson
+        case event: MemberRemovedEvent => event.toJson
+        case event: ClientEvent => event.toJson
+      }.toVector
+      JsObject(
+        "time_ms" -> JsNumber((res.timeMs.getMillis / 1000).toLong),
+        "events" -> JsArray(events)
+      )
     }
     def read(json: JsValue): WebhookRequest = {
       json.asJsObject.getFields("time_ms", "events") match {
-        case Seq(JsString(timeMs), JsArray(events)) =>
-          WebhookRequest(timeMs.toJson.convertTo[DateTime], events.map { event =>
-            val pattern = "^client-".r
-            event.toJson.convertTo[Map[String, String]].getOrElse("name", "") match {
-              case pattern(s)         => event.convertTo[ClientEvent]
-              case "channel-occupied" => event.convertTo[ChannelOccupiedEvent]
-              case "channel-vacated"  => event.convertTo[ChannelVacatedEvent]
-              case "member-added"     => event.convertTo[MemberAddedEvent]
-              case "member-removed"   => event.convertTo[MemberRemovedEvent]
+        case Seq(JsNumber(timeMs), JsArray(events)) =>
+          WebhookRequest(new DateTime(timeMs.toLong * 1000), events.map { event =>
+            val pattern = "^(client-.*)$".r
+            println(event)
+            //event.convertTo[Map[JsString, JsString]].getOrElse("name", "") match {
+            event.asJsObject.getFields("name")(0) match {
+              case JsString(pattern(s))         => event.convertTo[ClientEvent]
+              case JsString("channel-occupied") => event.convertTo[ChannelOccupiedEvent]
+              case JsString("channel-vacated")  => event.convertTo[ChannelVacatedEvent]
+              case JsString("member-added")     => event.convertTo[MemberAddedEvent]
+              case JsString("member-removed")   => event.convertTo[MemberRemovedEvent]
             }
           })
         case x => deserializationError("WebhookRequest is expected: " + x)
