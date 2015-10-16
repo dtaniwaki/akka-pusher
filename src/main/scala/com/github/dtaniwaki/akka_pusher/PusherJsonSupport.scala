@@ -86,13 +86,14 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         case Seq(JsNumber(timeMs), JsArray(events)) =>
           WebhookRequest(new DateTime(timeMs.toLong * 1000), events.map { event =>
             event.asJsObject.getFields("name")(0) match {
-              case JsString("client_event")         => event.convertTo[ClientEvent]
+              case JsString("client_event")     => event.convertTo[ClientEvent]
               case JsString("channel_occupied") => event.convertTo[ChannelOccupiedEvent]
               case JsString("channel_vacated")  => event.convertTo[ChannelVacatedEvent]
               case JsString("member_added")     => event.convertTo[MemberAddedEvent]
               case JsString("member_removed")   => event.convertTo[MemberRemovedEvent]
+              case _ => null
             }
-          })
+          }.filter(_ != null))
         case x => deserializationError("WebhookRequest is expected: " + x)
       }
     }

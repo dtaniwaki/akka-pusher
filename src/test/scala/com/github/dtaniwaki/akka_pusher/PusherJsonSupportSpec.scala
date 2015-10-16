@@ -27,6 +27,11 @@ class PusherJsonSupportSpec extends Specification
         WebhookRequest(new DateTime(12345000), List(event1, event2)).toJson === """{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": {"foo": "bar"}, "event": "event", "socket_id": "123.234"},{"name":"channel_occupied","channel":"test"}]}""".parseJson
       }
     }
+    "with invalid event" in {
+      "does not read from json object" in {
+        """{"time_ms": 12345, "events":[{"name": "invalid_event", "channel": "test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List())
+      }
+    }
     "with client event" in {
       "read from json object" in {
         val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = Map("foo" -> "bar"), event = "event", socketId = "123.234")
