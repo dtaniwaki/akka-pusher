@@ -2,7 +2,7 @@ package com.github.dtaniwaki.akka_pusher
 
 import spray.json._
 import spray.http.Uri
-import scala.concurrent.{ ExecutionContext, Future, Promise, Await }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{ Failure, Success, Try }
@@ -107,7 +107,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     key == _key && signature(body) == _signature
   }
 
-  def request(req: HttpRequest): Future[String] = {
+  protected def request(req: HttpRequest): Future[String] = {
     Source.single(req, 0)
     .via(pool)
     .runWith(Sink.head)

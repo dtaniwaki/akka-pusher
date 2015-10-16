@@ -17,10 +17,6 @@ import com.typesafe.config.ConfigFactory
 import PusherModels._
 import PusherExceptions._
 
-abstract class AkkaTestkitSpecs2Support extends TestKit(ActorSystem()) with After with ImplicitSender {
-  def after = system.shutdown()
-}
-
 class PusherClientSpec extends Specification
   with RandomSequentialExecution
   with Mockito
@@ -38,107 +34,81 @@ class PusherClientSpec extends Specification
     }
   }
   "#trigger" should {
-    "test actor" in new AkkaTestkitSpecs2Support {
+    "test actor" in {
       "make a request to pusher" in {
-        val pusher = spy(new PusherClient())
-        pusher.request(any) returns Future("")
+        val pusher = new PusherClient() {
+          override def request(req: HttpRequest) = Future("")
+        }
 
         val res = pusher.trigger("event", "channel", "message", Some("123.234"))
         awaitResult(res) === Result("")
       }
       "without socket" in {
         "make a request to pusher" in {
-          val pusher = spy(new PusherClient())
-          pusher.request(any) returns Future("")
+          val pusher = new PusherClient() {
+            override def request(req: HttpRequest) = Future("")
+          }
 
           val res = pusher.trigger("event", "channel", "message")
           awaitResult(res) === Result("")
         }
       }
-      // "request failed" in {
-      //   "throws an exception" in {
-      //     val pusher = spy(new PusherClient())
-      //
-      //     {
-      //       pusher.trigger("event", "channel", "message")
-      //     } must throwA(new PusherException(s"Pusher request failed"))
-      //   }
-      // }
     }
   }
   "#channel" should {
-    "test actor" in new AkkaTestkitSpecs2Support {
+    "test actor" in {
       "make a request to pusher" in {
-        val pusher = spy(new PusherClient())
-        pusher.request(any) returns Future("")
+        val pusher = new PusherClient() {
+          override def request(req: HttpRequest) = Future("")
+        }
 
         val res = pusher.channel("channel", Some(Seq("attr1", "attr2")))
         awaitResult(res) === Channel("")
       }
       "without attributes" in {
         "make a request to pusher" in {
-          val pusher = spy(new PusherClient())
-          pusher.request(any) returns Future("")
+          val pusher = new PusherClient() {
+            override def request(req: HttpRequest) = Future("")
+          }
 
           val res = pusher.channel("channel")
           awaitResult(res) === Channel("")
         }
       }
-      //   "request failed" in {
-      //     "returns a pusher error" in {
-      //       {
-      //         pusher.channel("channel")
-      //       } must throwA(new PusherException(s"Pusher request failed"))
-      //     }
-      //   }
-      // }
     }
   }
   "#channels" should {
-    "test actor" in new AkkaTestkitSpecs2Support {
+    "test actor" in {
       "make a request to pusher" in {
-        val pusher = spy(new PusherClient())
-        pusher.request(any) returns Future("")
+        val pusher = new PusherClient() {
+          override def request(req: HttpRequest) = Future("")
+        }
 
         val res = pusher.channels("prefix", Some(Seq("attr1", "attr2")))
         awaitResult(res) === Channels("")
       }
       "without attributes" in {
         "make a request to pusher" in {
-          val pusher = spy(new PusherClient())
-          pusher.request(any) returns Future("")
+          val pusher = new PusherClient() {
+            override def request(req: HttpRequest) = Future("")
+          }
 
           val res = pusher.channels("prefix")
           awaitResult(res) === Channels("")
         }
       }
-      //   "request failed" in {
-      //     "returns a pusher error" in {
-      //       {
-      //         pusher.channels("prefix")
-      //       } must throwA(new PusherException(s"Pusher request failed"))
-      //     }
-      //   }
-      // }
     }
   }
   "#users" should {
-    "test actor" in new AkkaTestkitSpecs2Support {
+    "test actor" in {
       "make a request to pusher" in {
-        val pusher = spy(new PusherClient())
-        pusher.request(any) returns Future("")
+        val pusher = new PusherClient() {
+          override def request(req: HttpRequest) = Future("")
+        }
 
         val res = pusher.users("channel")
         awaitResult(res) === Users("")
       }
-      //   "request failed" in {
-      //     "returns a pusher error" in {
-      //       {
-      //         pusher.users("channel")
-      //       } must throwA(new PusherException(s"Pusher request failed"))
-      //     }
-      //   }
-      // }
     }
   }
   "#authenticate" should {
