@@ -3,7 +3,7 @@ machine:
     version: oraclejdk8
   timezone: UTC
   environment:
-    SBT_OPTS: -Dconfig.resource=akka-pusher-test.conf
+    SBT_OPTS:
 dependencies:
   cache_directories:
     - "~/.sbt"

@@ -6,6 +6,7 @@ import org.specs2.specification.process.RandomSequentialExecution
 import PusherExceptions._
 
 class PusherValidatorSpec extends Specification
+  with SpecHelper
   with RandomSequentialExecution
   with PusherValidator
 {

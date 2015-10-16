@@ -19,6 +19,7 @@ import PusherExceptions._
 
 class PusherClientSpec extends Specification
   with RandomSequentialExecution
+  with SpecHelper
   with Mockito
 {
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)

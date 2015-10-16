@@ -10,6 +10,7 @@ import PusherRequests._
 import PusherEvents._
 
 class PusherJsonSupportSpec extends Specification
+  with SpecHelper
   with RandomSequentialExecution
   with PusherJsonSupport
 {

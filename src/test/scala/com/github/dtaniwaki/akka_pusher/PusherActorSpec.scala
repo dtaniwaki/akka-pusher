@@ -20,6 +20,7 @@ class TestActor(_pusher: PusherClient) extends PusherActor {
 }
 
 class PusherActorSpec extends Specification
+  with SpecHelper
   with RandomSequentialExecution
   with Mockito
 {
