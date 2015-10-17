@@ -33,7 +33,7 @@ class PusherActorSpec extends Specification
     "with TriggerMessage" in {
       "returns ResponseMessage with Result" in {
         val pusher = mock[PusherClient].smart
-        pusher.trigger(anyString, anyString, anyString, any)(any) returns Future(Result(""))
+        pusher.trigger(anyString, anyString, any, any) returns Future(Result(""))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? TriggerMessage("event", "channel", "message", Some("123.234"))

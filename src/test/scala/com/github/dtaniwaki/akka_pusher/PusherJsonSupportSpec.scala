@@ -21,14 +21,19 @@ class PusherJsonSupportSpec extends Specification
   "WebhookRequestJsonSupport" should {
     "with multiple different events" in {
       "read from json object" in {
-        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = Map("foo" -> "bar"), event = "event", socketId = "123.234")
+        val data: Map[String, String] = Map("foo" -> "bar")
+        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
         val event2 = ChannelOccupiedEvent("channel_occupied", "test")
-        """{"time_ms": 12345, "events":[{"name":"client_event", "channel":"test", "user_id":"123", "data": {"foo":"bar"}, "event":"event", "socket_id":"123.234"},{"name":"channel_occupied","channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event1, event2))
+        val dataString = data.toJson.toString.replace("\"", "\\\"")
+        s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"},{"name":"channel_occupied","channel":"test"}]}"""
+          .parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event1, event2))
       }
       "write to json object" in {
-        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = Map("foo" -> "bar"), event = "event", socketId = "123.234")
+        val data: Map[String, String] = Map("foo" -> "bar")
+        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
         val event2 = ChannelOccupiedEvent("channel_occupied", "test")
-        WebhookRequest(new DateTime(12345000), List(event1, event2)).toJson === """{"time_ms": 12345, "events":[{"name":"client_event", "channel":"test", "user_id":"123", "data": {"foo":"bar"}, "event":"event", "socket_id":"123.234"},{"name":"channel_occupied","channel":"test"}]}""".parseJson
+        val dataString = data.toJson.toString.replace("\"", "\\\"")
+        WebhookRequest(new DateTime(12345000), List(event1, event2)).toJson === s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"},{"name":"channel_occupied","channel":"test"}]}""".parseJson
       }
     }
     "with invalid event" in {
@@ -41,12 +46,16 @@ class PusherJsonSupportSpec extends Specification
     }
     "with client event" in {
       "read from json object" in {
-        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = Map("foo" -> "bar"), event = "event", socketId = "123.234")
-        """{"time_ms": 12345, "events":[{"name":"client_event", "channel":"test", "user_id":"123", "data": {"foo":"bar"}, "event":"event", "socket_id":"123.234"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
+        val data: Map[String, String] = Map("foo" -> "bar")
+        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
+        val dataString = data.toJson.toString.replace("\"", "\\\"")
+        s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
       }
       "write to json object" in {
-        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = Map("foo" -> "bar"), event = "event", socketId = "123.234")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"client_event", "channel":"test", "user_id":"123", "data": {"foo":"bar"}, "event":"event", "socket_id":"123.234"}]}""".parseJson
+        val data: Map[String, String] = Map("foo" -> "bar")
+        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
+        val dataString = data.toJson.toString.replace("\"", "\\\"")
+        WebhookRequest(new DateTime(12345000), List(event)).toJson === s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"}]}""".parseJson
       }
     }
     "with channel_occupied event" in {

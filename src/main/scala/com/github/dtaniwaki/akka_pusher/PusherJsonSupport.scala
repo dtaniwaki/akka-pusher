@@ -32,14 +32,15 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         "channel" -> JsString(event.channel),
         "user_id" -> JsString(event.userId),
         "event" -> JsString(event.event),
-        "data" -> event.data.toJson,
+        "data" -> JsString(event.data.toJson.compactPrint),
         "socket_id" -> JsString(event.socketId)
       )
     }
+
     def read(json: JsValue): ClientEvent = {
       json.asJsObject.getFields("name", "channel", "user_id", "event", "data", "socket_id") match {
-        case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), data, JsString(socketId)) =>
-          ClientEvent(name, channel, userId, event, data.convertTo[Map[String, String]], socketId)
+        case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), JsString(data), JsString(socketId)) =>
+          ClientEvent(name, channel, userId, event, data.parseJson.convertTo[Map[String, String]], socketId)
       }
     }
   }
