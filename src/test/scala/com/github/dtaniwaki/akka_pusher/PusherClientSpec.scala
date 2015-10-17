@@ -7,6 +7,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.HttpProtocols._
 import akka.http.scaladsl.model.MediaTypes._
+import akka.testkit._
+import spray.json.{JsString, JsValue, JsonWriter}
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,6 +24,10 @@ class PusherClientSpec extends Specification
   with Mockito
 {
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
+  implicit val system = ActorSystem("pusher")
+  implicit object stringJsonFormat extends JsonWriter[String] {
+    override def write(obj: String): JsValue = JsString(obj)
+  }
 
   "#constructor" should {
     "accept the config by argument" in {

@@ -47,21 +47,25 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   else
     "http"
 
-  def trigger(event: String, channel: String, message: String, socketId: Option[String] = None): Future[Result] = {
+  def trigger[T](event: String, channel: String, data: T, socketId: Option[String] = None)(implicit writer: JsonWriter[T]): Future[Result] = {
     validateChannel(channel)
     socketId.map(validateSocketId)
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
-    val data = Map(
-      "data" -> Some(Map("message" -> message).toJson.toString),
+    val body = JsObject(Map(
+      "data" -> Some(data.toJson),
       "name" -> Some(event),
       "channel" -> Some(channel),
       "socket_id" -> socketId
-    ).filter(_._2.isDefined).mapValues(_.get)
+    )
+      .filter(_._2.isDefined)
+      .mapValues(_.get)
+      .mapValues(toJsValue))
+      .toString
 
-    uri = signUri("POST", uri, Some(data))
+    uri = signUri("POST", uri, Some(body))
 
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.compactPrint))).map{ new Result(_) }
+    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
   }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
@@ -136,11 +140,25 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     }
   }
 
+  private def toJsValue(any: Any): JsValue = any match {
+    case value: JsValue => value
+    case value: String => JsString(value)
+    case value: Boolean => JsBoolean(value)
+    case value: Int => JsNumber(value)
+    case value: Long => JsNumber(value)
+    case value: Double => JsNumber(value)
+    case value: Vector[_] => JsArray(value.map(toJsValue))
+    case Some(value) => toJsValue(value)
+    case None => JsNull
+    case null => JsNull
+    case _ => deserializationError(s"Undeserializable value: $any")
+  }
+
   private def generateUri(path: Uri.Path): Uri = {
     Uri(scheme = scheme, authority = Uri.Authority(Uri.Host(host)), path = path)
   }
 
-  private def signUri(method: String, uri: Uri, data: Option[Map[String, String]] = None): Uri = {
+  private def signUri(method: String, uri: Uri, data: Option[String] = None): Uri = {
     var signedUri = uri
     var params = List(
       ("auth_key", key),

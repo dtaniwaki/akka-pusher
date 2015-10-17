@@ -1,7 +1,7 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
-import spray.json.JsonFormat
+import spray.json.{JsonFormat,JsString, JsValue, JsonWriter}
 import scala.concurrent.{ Future, Await, Awaitable }
 import scala.concurrent.duration._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
@@ -12,6 +12,9 @@ import PusherModels.ChannelData
 
 class PusherActor[T : JsonFormat] extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
+  implicit object stringJsonFormat extends JsonWriter[String] {
+    override def write(obj: String): JsValue = JsString(obj)
+  }
 
   val pusher = new PusherClient()
 
