@@ -36,7 +36,6 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         "socket_id" -> JsString(event.socketId)
       )
     }
-
     def read(json: JsValue): ClientEvent = {
       json.asJsObject.getFields("name", "channel", "user_id", "event", "data", "socket_id") match {
         case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), JsString(data), JsString(socketId)) =>
@@ -85,12 +84,12 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
       json.asJsObject.getFields("time_ms", "events") match {
         case Seq(JsNumber(timeMs), JsArray(events)) =>
           WebhookRequest(new DateTime(timeMs.toLong * 1000L), events.map { event =>
-            event.asJsObject.getFields("name")(0) match {
-              case JsString("client_event")     => event.convertTo[ClientEvent]
-              case JsString("channel_occupied") => event.convertTo[ChannelOccupiedEvent]
-              case JsString("channel_vacated")  => event.convertTo[ChannelVacatedEvent]
-              case JsString("member_added")     => event.convertTo[MemberAddedEvent]
-              case JsString("member_removed")   => event.convertTo[MemberRemovedEvent]
+            event.asJsObject.getFields("name") match {
+              case Seq(JsString("client_event"))     => event.convertTo[ClientEvent]
+              case Seq(JsString("channel_occupied")) => event.convertTo[ChannelOccupiedEvent]
+              case Seq(JsString("channel_vacated"))  => event.convertTo[ChannelVacatedEvent]
+              case Seq(JsString("member_added"))     => event.convertTo[MemberAddedEvent]
+              case Seq(JsString("member_removed"))   => event.convertTo[MemberRemovedEvent]
               case _ => null
             }
           }.filter(_ != null))
