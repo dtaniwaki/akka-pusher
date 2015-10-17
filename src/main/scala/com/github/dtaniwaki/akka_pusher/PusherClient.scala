@@ -23,7 +23,7 @@ import Utils._
 import PusherModels._
 import PusherExceptions._
 
-class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher")) extends PusherJsonSupport
+class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client")) extends PusherJsonSupport
   with StrictLogging
   with PusherValidator
 {
@@ -36,7 +36,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   else
     false
 
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer = ActorMaterializer()(system)
   private val pool = if (ssl)
     Http(system).cachedHostConnectionPoolTls[Int](host)
   else
@@ -153,5 +153,9 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   private def signature(value: String): String = {
     sha256(secret, value)
+  }
+
+  def shutdown() = {
+    Http(system).shutdownAllConnectionPools()
   }
 }
