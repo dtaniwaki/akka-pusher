@@ -32,14 +32,15 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         "channel" -> JsString(event.channel),
         "user_id" -> JsString(event.userId),
         "event" -> JsString(event.event),
-        "data" -> event.data.toJson,
+        "data" -> JsString(event.data.toJson.toString),
         "socket_id" -> JsString(event.socketId)
       )
     }
+
     def read(json: JsValue): ClientEvent = {
       json.asJsObject.getFields("name", "channel", "user_id", "event", "data", "socket_id") match {
-        case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), data, JsString(socketId)) =>
-          ClientEvent(name, channel, userId, event, data.convertTo[Map[String, String]], socketId)
+        case Seq(JsString(name), JsString(channel), JsString(userId), JsString(event), JsString(data), JsString(socketId)) =>
+          ClientEvent(name, channel, userId, event, data.parseJson.convertTo[Map[String, String]], socketId)
       }
     }
   }
@@ -76,14 +77,14 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         case event: ClientEvent => event.toJson
       }.toVector
       JsObject(
-        "time_ms" -> JsNumber((res.timeMs.getMillis / 1000).toLong),
+        "time_ms" -> JsNumber(res.timeMs.getMillis / 1000L),
         "events" -> JsArray(events)
       )
     }
     def read(json: JsValue): WebhookRequest = {
       json.asJsObject.getFields("time_ms", "events") match {
         case Seq(JsNumber(timeMs), JsArray(events)) =>
-          WebhookRequest(new DateTime(timeMs.toLong * 1000), events.map { event =>
+          WebhookRequest(new DateTime(timeMs.toLong * 1000L), events.map { event =>
             event.asJsObject.getFields("name")(0) match {
               case JsString("client_event")     => event.convertTo[ClientEvent]
               case JsString("channel_occupied") => event.convertTo[ChannelOccupiedEvent]
