@@ -1,20 +1,16 @@
 package com.github.dtaniwaki.akka_pusher
 
-import org.specs2.mutable.{After, Specification}
-import org.specs2.specification.process.RandomSequentialExecution
-import org.specs2.mock.Mockito
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.HttpProtocols._
-import akka.http.scaladsl.model.MediaTypes._
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.typesafe.config.ConfigFactory
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.specification.process.RandomSequentialExecution
 import spray.json.DefaultJsonProtocol._
 
-import PusherModels._
-import PusherExceptions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class PusherClientSpec extends Specification
   with RandomSequentialExecution

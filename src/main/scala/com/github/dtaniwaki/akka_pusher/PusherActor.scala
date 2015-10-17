@@ -1,22 +1,15 @@
 package com.github.dtaniwaki.akka_pusher
 
+import spray.json.DefaultJsonProtocol._
 import akka.actor._
-import spray.json.{JsonFormat,JsString, JsValue, JsonWriter}
-import scala.concurrent.{ Future, Await, Awaitable }
-import scala.concurrent.duration._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
-import scala.concurrent.ExecutionContext.Implicits.global
 
-import PusherModels.ChannelData
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class PusherActor extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
-
-  implicit object jsValueJsonFormat extends JsonWriter[JsValue] {
-    override def write(obj: JsValue): JsValue = obj
-  }
-
   val pusher = new PusherClient()
 
   override def receive: Receive = {

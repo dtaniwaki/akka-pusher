@@ -1,21 +1,19 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor.{ActorSystem, Props}
-import akka.testkit.TestActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import com.github.dtaniwaki.akka_pusher.PusherMessages._
+import com.github.dtaniwaki.akka_pusher.PusherModels._
+import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
-import org.specs2.mock.Mockito
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
-import scala.concurrent.ExecutionContext.Implicits.global
-import spray.json._
 import spray.json.DefaultJsonProtocol._
+import spray.json._
 
-import PusherModels._
-import PusherMessages._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class TestActor(_pusher: PusherClient) extends PusherActor {
   override val pusher = _pusher
@@ -35,7 +33,7 @@ class PusherActorSpec extends Specification
     "with TriggerMessage" in {
       "returns ResponseMessage with Result" in {
         val pusher = mock[PusherClient].smart
-        pusher.trigger(anyString, anyString, anyString, any) returns Future(Result(""))
+        pusher.trigger(anyString, anyString, anyString, any)(any) returns Future(Result(""))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? TriggerMessage("event", "channel", "message", Some("123.234"))

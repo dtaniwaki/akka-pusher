@@ -1,7 +1,7 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json.{JsonFormat, JsValue}
 import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
+import spray.json.JsValue
 
 object PusherMessages {
   case class TriggerMessage(

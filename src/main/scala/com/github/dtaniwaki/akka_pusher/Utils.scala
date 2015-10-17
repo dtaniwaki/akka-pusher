@@ -1,10 +1,9 @@
 package com.github.dtaniwaki.akka_pusher
 
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.math.BigInteger
-import javax.crypto.spec.SecretKeySpec
+import java.security.MessageDigest
 import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 object Utils {
   def byteArrayToString(data: Array[Byte]) = {
