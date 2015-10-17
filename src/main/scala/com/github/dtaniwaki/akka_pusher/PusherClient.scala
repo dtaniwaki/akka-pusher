@@ -47,7 +47,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   else
     "http"
 
-  def trigger[T](event: String, channel: String, data: T, socketId: Option[String] = None)(implicit writer: JsonWriter[T]): Future[Result] = {
+  def trigger[T](channel: String, event: String, data: T, socketId: Option[String] = None)(implicit writer: JsonWriter[T]): Future[Result] = {
     validateChannel(channel)
     socketId.map(validateSocketId)
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
