@@ -60,7 +60,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("POST", uri, Some(data))
 
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.toString))).map{ new Result(_) }
+    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.compactPrint))).map{ new Result(_) }
   }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
@@ -142,7 +142,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       ("auth_version", "1.0")
     )
     if (data.isDefined) {
-      val serializedData = data.get.toJson.toString
+      val serializedData = data.get.toJson.compactPrint
       params = params :+ ("body_md5", md5(serializedData))
     }
     signedUri = signedUri.withQuery(params ++ uri.query.toList: _*)
