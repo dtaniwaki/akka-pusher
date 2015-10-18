@@ -116,7 +116,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
   implicit val ChannelJsonSupport = jsonFormat(Channel.apply _, "occupied", "user_count", "subscription_count")
   implicit object UserListJsonSupport extends RootJsonFormat[List[User]] {
     def write(users: List[User]): JsValue = {
-      JsArray(users.map(_.toJson).toVector)
+      JsObject("users" -> JsArray(users.map(_.toJson).toVector))
     }
     def read(json: JsValue): List[User] = {
       json.asJsObject.getFields("users") match {
