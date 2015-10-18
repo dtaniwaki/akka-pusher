@@ -32,81 +32,73 @@ class PusherClientSpec extends Specification
     }
   }
   "#trigger" should {
-    "test actor" in {
+    "make a request to pusher" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("")
+      }
+
+      val res = pusher.trigger("event", "channel", "message", Some("123.234"))
+      awaitResult(res) === Result("")
+    }
+    "without socket" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
           override def request(req: HttpRequest) = Future("")
         }
 
-        val res = pusher.trigger("event", "channel", "message", Some("123.234"))
+        val res = pusher.trigger("event", "channel", "message")
         awaitResult(res) === Result("")
-      }
-      "without socket" in {
-        "make a request to pusher" in {
-          val pusher = new PusherClient() {
-            override def request(req: HttpRequest) = Future("")
-          }
-
-          val res = pusher.trigger("event", "channel", "message")
-          awaitResult(res) === Result("")
-        }
       }
     }
   }
   "#channel" should {
-    "test actor" in {
+    "make a request to pusher" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("{}")
+      }
+
+      val res = pusher.channel("channel", Some(Seq("attr1", "attr2")))
+      awaitResult(res) === Channel()
+    }
+    "without attributes" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
           override def request(req: HttpRequest) = Future("{}")
         }
 
-        val res = pusher.channel("channel", Some(Seq("attr1", "attr2")))
+        val res = pusher.channel("channel")
         awaitResult(res) === Channel()
-      }
-      "without attributes" in {
-        "make a request to pusher" in {
-          val pusher = new PusherClient() {
-            override def request(req: HttpRequest) = Future("{}")
-          }
-
-          val res = pusher.channel("channel")
-          awaitResult(res) === Channel()
-        }
       }
     }
   }
   "#channels" should {
-    "test actor" in {
+    "make a request to pusher" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("{}")
+      }
+
+      val res = pusher.channels("prefix", Some(Seq("attr1", "attr2")))
+      awaitResult(res) === Map[String, Channel]()
+    }
+    "without attributes" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
           override def request(req: HttpRequest) = Future("{}")
         }
 
-        val res = pusher.channels("prefix", Some(Seq("attr1", "attr2")))
+        val res = pusher.channels("prefix")
         awaitResult(res) === Map[String, Channel]()
-      }
-      "without attributes" in {
-        "make a request to pusher" in {
-          val pusher = new PusherClient() {
-            override def request(req: HttpRequest) = Future("{}")
-          }
-
-          val res = pusher.channels("prefix")
-          awaitResult(res) === Map[String, Channel]()
-        }
       }
     }
   }
   "#users" should {
-    "test actor" in {
-      "make a request to pusher" in {
-        val pusher = new PusherClient() {
-          override def request(req: HttpRequest) = Future("""{"users" : []}""")
-        }
-
-        val res = pusher.users("channel")
-        awaitResult(res) === List[User]()
+    "make a request to pusher" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("""{"users" : []}""")
       }
+
+      val res = pusher.users("channel")
+      awaitResult(res) === List[User]()
     }
   }
   "#authenticate" should {
