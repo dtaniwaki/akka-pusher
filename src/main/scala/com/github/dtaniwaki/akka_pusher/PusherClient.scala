@@ -74,10 +74,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map{ new  Channel(_) }
+    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[Channel])
   }
 
-  def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Channels] = {
+  def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Map[String, Channel]] = {
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels"))
 
     val params = Map(
@@ -87,15 +87,15 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map{ new Channels(_) }
+    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[Map[String, Channel]])
   }
 
-  def users(channel: String): Future[Users] = {
+  def users(channel: String): Future[List[User]] = {
     validateChannel(channel)
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels/$channel/users"))
     uri = signUri("GET", uri)
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
+    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[List[User]])
   }
 
   def authenticate(channel: String, socketId: String): AuthenticatedParams = {

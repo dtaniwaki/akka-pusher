@@ -4,14 +4,13 @@ import spray.json.JsonFormat
 import spray.json.DefaultJsonProtocol._
 
 object PusherModels {
-  case class Channels(
-    data: String
-  )
   case class Channel(
-    data: String
+    occupied: Option[Boolean] = None,
+    userCount: Option[Int] = None,
+    subscriptionCount: Option[Int] = None
   )
-  case class Users(
-    data: String
+  case class User(
+    id: String
   )
   case class Result(
     data: String

@@ -99,8 +99,34 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
   }
 
   implicit val ResultJsonSupport = jsonFormat1(Result)
-  implicit val ChannelsJsonSupport = jsonFormat1(Channels)
-  implicit val ChannelJsonSupport = jsonFormat1(Channel)
-  implicit val UsersJsonSupport = jsonFormat1(Users)
+  implicit object ChannelMapJsonSupport extends RootJsonFormat[Map[String, Channel]] {
+    def write(channels: Map[String, Channel]): JsValue = {
+      JsObject(channels.map {
+        case (name, channel) =>
+          (name, channel.toJson)
+      })
+    }
+    def read(json: JsValue): Map[String, Channel] = {
+      json.asJsObject.fields.map {
+        case (channelName, channelData) =>
+          (channelName, channelData.convertTo[Channel])
+      }
+    }
+  }
+  implicit val ChannelJsonSupport = jsonFormat(Channel.apply _, "occupied", "user_count", "subscription_count")
+  implicit object UserListJsonSupport extends RootJsonFormat[List[User]] {
+    def write(users: List[User]): JsValue = {
+      JsArray(users.map(_.toJson).toVector)
+    }
+    def read(json: JsValue): List[User] = {
+      json.asJsObject.getFields("users") match {
+        case Seq(JsArray(users)) =>
+          users.map { user =>
+            user.convertTo[User]
+          }.toList
+      }
+    }
+  }
+  implicit val UserJsonSupport = jsonFormat(User.apply _, "id")
   implicit val AuthenticatedParamsJsonSupport = jsonFormat(AuthenticatedParams.apply, "auth", "channel_data")
 }

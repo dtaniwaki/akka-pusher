@@ -44,31 +44,31 @@ class PusherActorSpec extends Specification
     "with ChannelMessage" in {
       "returns ResponseMessage with Channel" in {
         val pusher = mock[PusherClient].smart
-        pusher.channel(anyString, any) returns Future(Channel(""))
+        pusher.channel(anyString, any) returns Future(Channel())
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
-        awaitResult(future) === ResponseMessage(Channel(""))
+        awaitResult(future) === ResponseMessage(Channel())
       }
     }
     "with ChannelsMessage" in {
       "returns ResponseMessage with Channels" in {
         val pusher = mock[PusherClient].smart
-        pusher.channels(anyString, any) returns Future(Channels(""))
+        pusher.channels(anyString, any) returns Future(Map[String, Channel]())
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
-        awaitResult(future) === ResponseMessage(Channels(""))
+        awaitResult(future) === ResponseMessage(Map[String, Channel]())
       }
     }
     "with UsersMessage" in {
       "returns ResponseMessage with Users" in {
         val pusher = mock[PusherClient].smart
-        pusher.users(anyString) returns Future(Users(""))
+        pusher.users(anyString) returns Future(List[User]())
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? UsersMessage("channel")
-        awaitResult(future) === ResponseMessage(Users(""))
+        awaitResult(future) === ResponseMessage(List[User]())
       }
     }
     "with AuthenticateMessage" in {

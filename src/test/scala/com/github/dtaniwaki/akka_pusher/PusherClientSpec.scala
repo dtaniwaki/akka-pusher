@@ -57,20 +57,20 @@ class PusherClientSpec extends Specification
     "test actor" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
-          override def request(req: HttpRequest) = Future("")
+          override def request(req: HttpRequest) = Future("{}")
         }
 
         val res = pusher.channel("channel", Some(Seq("attr1", "attr2")))
-        awaitResult(res) === Channel("")
+        awaitResult(res) === Channel()
       }
       "without attributes" in {
         "make a request to pusher" in {
           val pusher = new PusherClient() {
-            override def request(req: HttpRequest) = Future("")
+            override def request(req: HttpRequest) = Future("{}")
           }
 
           val res = pusher.channel("channel")
-          awaitResult(res) === Channel("")
+          awaitResult(res) === Channel()
         }
       }
     }
@@ -79,20 +79,20 @@ class PusherClientSpec extends Specification
     "test actor" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
-          override def request(req: HttpRequest) = Future("")
+          override def request(req: HttpRequest) = Future("{}")
         }
 
         val res = pusher.channels("prefix", Some(Seq("attr1", "attr2")))
-        awaitResult(res) === Channels("")
+        awaitResult(res) === Map[String, Channel]()
       }
       "without attributes" in {
         "make a request to pusher" in {
           val pusher = new PusherClient() {
-            override def request(req: HttpRequest) = Future("")
+            override def request(req: HttpRequest) = Future("{}")
           }
 
           val res = pusher.channels("prefix")
-          awaitResult(res) === Channels("")
+          awaitResult(res) === Map[String, Channel]()
         }
       }
     }
@@ -101,11 +101,11 @@ class PusherClientSpec extends Specification
     "test actor" in {
       "make a request to pusher" in {
         val pusher = new PusherClient() {
-          override def request(req: HttpRequest) = Future("")
+          override def request(req: HttpRequest) = Future("""{"users" : []}""")
         }
 
         val res = pusher.users("channel")
-        awaitResult(res) === Users("")
+        awaitResult(res) === List[User]()
       }
     }
   }
