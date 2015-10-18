@@ -44,24 +44,23 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
-  implicit object ChannelDataJsonSupport extends RootJsonFormat[ChannelData] {
-    override def write(data: ChannelData): JsValue =
-      data.userInfo.map { userInfo =>
+  implicit def ChannelDataJsonSupport[T : JsonFormat] = new JsonFormat[ChannelData[T]] {
+    override def write(data: ChannelData[T]): JsValue =
+      data.userInfo.map { info =>
         JsObject(
           "user_id" -> JsString(data.userId),
-          "user_info" -> userInfo.toJson
+          "user_info" -> info.toJson
         )
-      }.getOrElse(
+      }.getOrElse {
         JsObject("user_id" -> JsString(data.userId))
-      )
+      }
 
-
-    override def read(json: JsValue): ChannelData =
+    override def read(json: JsValue): ChannelData[T] =
       json.asJsObject.getFields("user_id", "user_info") match {
         case Seq(JsString(userId), userInfo) =>
-          ChannelData(userId, Some(userInfo.convertTo[Map[String, String]]))
+          ChannelData(userId, Some(userInfo.convertTo[T]))
         case Seq(JsString(userId), JsNull) =>
-          ChannelData(userId, None)
+          ChannelData[T](userId)
         case x => deserializationError("ChannelData is expected: " + x)
       }
   }

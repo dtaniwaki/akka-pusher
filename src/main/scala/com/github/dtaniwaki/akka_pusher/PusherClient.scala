@@ -23,7 +23,8 @@ import Utils._
 import PusherModels._
 import PusherExceptions._
 
-class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client")) extends PusherJsonSupport
+class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
+  extends PusherJsonSupport
   with StrictLogging
   with PusherValidator
 {
@@ -97,7 +98,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     request(HttpRequest(method = GET, uri = uri.toString)).map{ new Users(_) }
   }
 
-  def authenticate(channel: String, socketId: String, data: Option[ChannelData] = None): AuthenticatedParams = {
+  def authenticate(channel: String, socketId: String): AuthenticatedParams = {
+    val signingStrings = List(socketId, channel)
+    AuthenticatedParams(s"$key:${signature(signingStrings.mkString(":"))}")
+  }
+
+  def authenticate[T : JsonFormat](channel: String, socketId: String, data: Option[ChannelData[T]] = None): AuthenticatedParams = {
     val serializedData = data.map(_.toJson.compactPrint)
     val signingStrings = serializedData.foldLeft(List(socketId, channel))(_ :+ _)
     AuthenticatedParams(s"$key:${signature(signingStrings.mkString(":"))}", serializedData)

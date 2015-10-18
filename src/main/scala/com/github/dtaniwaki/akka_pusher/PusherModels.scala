@@ -1,5 +1,8 @@
 package com.github.dtaniwaki.akka_pusher
 
+import spray.json.JsonFormat
+import spray.json.DefaultJsonProtocol._
+
 object PusherModels {
   case class Channels(
     data: String
@@ -17,7 +20,7 @@ object PusherModels {
     auth: String,
     channelData: Option[String] = None
   )
-  case class ChannelData(
+  case class ChannelData[+T : JsonFormat](
     /**
      * unique identifier for that user
      */
@@ -25,6 +28,10 @@ object PusherModels {
     /**
      * optional set of identifying information
      */
-    userInfo: Option[Map[String, String]] = None
+    userInfo: Option[T] = None
   )
+  object ChannelData {
+    def apply(userId: String) = new ChannelData[Map[String, String]](userId)
+    def apply[T : JsonFormat](userId: String, userInfo: Some[T]) = new ChannelData(userId, userInfo)
+  }
 }

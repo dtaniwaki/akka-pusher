@@ -11,6 +11,7 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
+import spray.json.DefaultJsonProtocol._
 
 import PusherModels._
 import PusherExceptions._

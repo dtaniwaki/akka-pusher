@@ -11,11 +11,12 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.ExecutionContext.Implicits.global
+import spray.json.DefaultJsonProtocol._
 
 import PusherModels._
 import PusherMessages._
 
-class TestActor(_pusher: PusherClient) extends PusherActor {
+class TestActor(_pusher: PusherClient) extends PusherActor[Map[String, String]] {
   override val pusher = _pusher
 }
 
@@ -72,7 +73,7 @@ class PusherActorSpec extends Specification
     }
     "with AuthenticateMessage" in {
       "returns ResponseMessage with AuthenticatedParams" in {
-        val actorRef = system.actorOf(PusherActor.props)
+        val actorRef = system.actorOf(PusherActor.props())
         val channelData = ChannelData(
           userId = "test_user",
           userInfo = Some(Map("foo" -> "bar"))
@@ -81,15 +82,15 @@ class PusherActorSpec extends Specification
         awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5e76b03a1e16bda68b183aef8ca71fb2fad9773eae977ff3912bca2ec2d3a7e0", Some("""{"user_id":"test_user","user_info":{"foo":"bar"}}""")))
       }
       "returns ResponseMessage with AuthenticatedParams, userInfo not included" in {
-        val actorRef = system.actorOf(PusherActor.props)
-        val channelData = ChannelData("test_user")
+        val actorRef = system.actorOf(PusherActor.props())
+        val channelData = ChannelData(userId = "test_user")
         val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
         awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}""")))
       }
     }
     "with ValidateSignatureMessage" in {
       "returns ResponseMessage with Boolean" in {
-        val actorRef = system.actorOf(PusherActor.props)
+        val actorRef = system.actorOf(PusherActor.props())
         val future = actorRef ? ValidateSignatureMessage("key", "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4", "foo")
         awaitResult(future) === ResponseMessage(true)
       }
