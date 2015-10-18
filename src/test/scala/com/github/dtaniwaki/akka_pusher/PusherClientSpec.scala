@@ -3,12 +3,10 @@ package com.github.dtaniwaki.akka_pusher
 import org.specs2.mutable.{After, Specification}
 import org.specs2.specification.process.RandomSequentialExecution
 import org.specs2.mock.Mockito
-import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.HttpProtocols._
 import akka.http.scaladsl.model.MediaTypes._
-import akka.testkit._
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,8 +21,6 @@ class PusherClientSpec extends Specification
   with Mockito
 {
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
-  implicit val system = ActorSystem("pusher")
-  sequential
 
   "#constructor" should {
     "accept the config by argument" in {
