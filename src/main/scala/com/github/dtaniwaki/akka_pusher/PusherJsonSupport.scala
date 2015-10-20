@@ -44,7 +44,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
-  implicit def ChannelDataJsonSupport[T : JsonFormat] = new JsonFormat[ChannelData[T]] {
+  implicit def ChannelDataJsonWriterSupport[T](implicit writer: JsonWriter[T]) = new JsonWriter[ChannelData[T]] {
     override def write(data: ChannelData[T]): JsValue =
       data.userInfo.map { info =>
         JsObject(
@@ -54,7 +54,9 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
       }.getOrElse {
         JsObject("user_id" -> JsString(data.userId))
       }
+  }
 
+  implicit def ChannelDataJsonReaderSupport[T](implicit writer: JsonReader[T]) = new JsonReader[ChannelData[T]] {
     override def read(json: JsValue): ChannelData[T] =
       json.asJsObject.getFields("user_id", "user_info") match {
         case Seq(JsString(userId), userInfo) =>

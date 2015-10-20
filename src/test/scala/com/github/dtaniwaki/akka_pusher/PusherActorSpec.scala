@@ -12,12 +12,13 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.ExecutionContext.Implicits.global
+import spray.json._
 import spray.json.DefaultJsonProtocol._
 
 import PusherModels._
 import PusherMessages._
 
-class TestActor(_pusher: PusherClient) extends PusherActor[Map[String, String]] {
+class TestActor(_pusher: PusherClient) extends PusherActor {
   override val pusher = _pusher
 }
 
@@ -80,7 +81,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(PusherActor.props())
         val channelData = ChannelData(
           userId = "test_user",
-          userInfo = Some(Map("foo" -> "bar"))
+          userInfo = Some(Map("foo" -> "bar").toJson)
         )
         val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
         awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5e76b03a1e16bda68b183aef8ca71fb2fad9773eae977ff3912bca2ec2d3a7e0", Some("""{"user_id":"test_user","user_info":{"foo":"bar"}}""")))

@@ -1,6 +1,6 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json.JsonFormat
+import spray.json.{JsonFormat, JsValue}
 import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
 
 object PusherMessages {
@@ -21,10 +21,10 @@ object PusherMessages {
   case class UsersMessage(
     channel: String
   )
-  case class AuthenticateMessage[T : JsonFormat](
+  case class AuthenticateMessage(
     socketId: String,
     channel: String,
-    data: Option[ChannelData[T]] = None
+    data: Option[ChannelData[JsValue]] = None
   )
   case class ValidateSignatureMessage(
     key: String,
