@@ -1,7 +1,7 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
-import spray.json.JsonFormat
+import spray.json.{JsonFormat,JsString, JsValue, JsonWriter}
 import scala.concurrent.{ Future, Await, Awaitable }
 import scala.concurrent.duration._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
@@ -10,8 +10,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import PusherModels.ChannelData
 
-class PusherActor[T : JsonFormat] extends Actor with StrictLogging {
+class PusherActor extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
+
+  implicit object jsValueJsonFormat extends JsonWriter[JsValue] {
+    override def write(obj: JsValue): JsValue = obj
+  }
 
   val pusher = new PusherClient()
 
@@ -25,12 +29,7 @@ class PusherActor[T : JsonFormat] extends Actor with StrictLogging {
     case UsersMessage(channel) =>
       sender ! new ResponseMessage(Await.result(pusher.users(channel), 5 seconds))
     case AuthenticateMessage(channel, socketId, data) =>
-      data match {
-        case Some(d: ChannelData[T]) =>
-          sender ! new ResponseMessage(pusher.authenticate(channel, socketId, Some(d)))
-        case None =>
-          sender ! new ResponseMessage(pusher.authenticate(channel, socketId))
-      }
+      sender ! new ResponseMessage(pusher.authenticate(channel, socketId, data))
     case ValidateSignatureMessage(key, signature, body) =>
       sender ! new ResponseMessage(pusher.validateSignature(key, signature, body))
     case message =>
@@ -44,5 +43,5 @@ class PusherActor[T : JsonFormat] extends Actor with StrictLogging {
 }
 
 object PusherActor {
-  def props[T : JsonFormat](klass: Class[T] = classOf[Map[String, String]]): Props = Props(new PusherActor[T]())
+  def props(): Props = Props(new PusherActor())
 }

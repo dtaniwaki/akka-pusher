@@ -19,7 +19,7 @@ object PusherModels {
     auth: String,
     channelData: Option[String] = None
   )
-  case class ChannelData[+T : JsonFormat](
+  case class ChannelData[+T](
     /**
      * unique identifier for that user
      */
@@ -29,8 +29,4 @@ object PusherModels {
      */
     userInfo: Option[T] = None
   )
-  object ChannelData {
-    def apply(userId: String) = new ChannelData[Map[String, String]](userId)
-    def apply[T : JsonFormat](userId: String, userInfo: Some[T]) = new ChannelData(userId, userInfo)
-  }
 }
