@@ -1,20 +1,18 @@
 package com.github.dtaniwaki.akka_pusher
 
-import org.specs2.mutable.{After, Specification}
-import org.specs2.specification.process.RandomSequentialExecution
-import org.specs2.mock.Mockito
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.HttpProtocols._
-import akka.http.scaladsl.model.MediaTypes._
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.typesafe.config.ConfigFactory
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.specification.process.RandomSequentialExecution
 import spray.json.DefaultJsonProtocol._
+import spray.json.{JsString, JsValue, JsonWriter}
 
-import PusherModels._
-import PusherExceptions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class PusherClientSpec extends Specification
   with RandomSequentialExecution
@@ -22,6 +20,7 @@ class PusherClientSpec extends Specification
   with Mockito
 {
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
+  implicit val system = ActorSystem("pusher")
 
   "#constructor" should {
     "accept the config by argument" in {
@@ -37,7 +36,7 @@ class PusherClientSpec extends Specification
         override def request(req: HttpRequest) = Future("")
       }
 
-      val res = pusher.trigger("event", "channel", "message", Some("123.234"))
+      val res = pusher.trigger("channel", "event", "message", Some("123.234"))
       awaitResult(res) === Result("")
     }
     "without socket" in {
@@ -46,7 +45,7 @@ class PusherClientSpec extends Specification
           override def request(req: HttpRequest) = Future("")
         }
 
-        val res = pusher.trigger("event", "channel", "message")
+        val res = pusher.trigger("channel", "event", "message")
         awaitResult(res) === Result("")
       }
     }

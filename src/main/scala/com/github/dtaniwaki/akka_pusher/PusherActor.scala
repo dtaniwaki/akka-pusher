@@ -12,6 +12,9 @@ import PusherModels.ChannelData
 
 class PusherActor extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
+  implicit object stringJsonFormat extends JsonWriter[String] {
+    override def write(obj: String): JsValue = JsString(obj)
+  }
 
   implicit object jsValueJsonFormat extends JsonWriter[JsValue] {
     override def write(obj: JsValue): JsValue = obj
@@ -20,8 +23,8 @@ class PusherActor extends Actor with StrictLogging {
   val pusher = new PusherClient()
 
   override def receive: Receive = {
-    case TriggerMessage(event, channel, message, socketId) =>
-      sender ! new ResponseMessage(Await.result(pusher.trigger(event, channel, message, socketId), 5 seconds))
+    case TriggerMessage(channel, event, message, socketId) =>
+      sender ! new ResponseMessage(Await.result(pusher.trigger(channel, event, message, socketId), 5 seconds))
     case ChannelMessage(channel, attributes) =>
       sender ! new ResponseMessage(Await.result(pusher.channel(channel, attributes), 5 seconds))
     case ChannelsMessage(prefixFilter, attributes) =>

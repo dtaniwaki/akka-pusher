@@ -7,6 +7,7 @@ import akka.util.Timeout
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import org.specs2.mock.Mockito
+import spray.json.{JsString, JsValue, JsonWriter}
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
@@ -28,6 +29,9 @@ class PusherActorSpec extends Specification
 {
   implicit val system = ActorSystem("pusher")
   implicit val timeout = Timeout(5 seconds)
+//  implicit object stringJsonFormat extends JsonWriter[String] {
+//    override def write(obj: String): JsValue = JsString(obj)
+//  }
 
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
 
@@ -35,7 +39,7 @@ class PusherActorSpec extends Specification
     "with TriggerMessage" in {
       "returns ResponseMessage with Result" in {
         val pusher = mock[PusherClient].smart
-        pusher.trigger(anyString, anyString, anyString, any) returns Future(Result(""))
+        pusher.trigger(anyString, anyString, anyString, any)(any) returns Future(Result(""))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         val future = actorRef ? TriggerMessage("event", "channel", "message", Some("123.234"))

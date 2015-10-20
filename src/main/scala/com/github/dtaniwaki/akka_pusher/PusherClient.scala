@@ -1,27 +1,24 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json._
-import spray.http.Uri
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{ Failure, Success, Try }
 import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.{ Source, Flow, Sink }
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.HttpProtocols._
-import akka.http.scaladsl.model.MediaTypes._
-import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.HttpsContext
-import com.typesafe.config.{ConfigFactory, Config}
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.model._
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Sink, Source}
+import com.github.dtaniwaki.akka_pusher.PusherExceptions._
+import com.github.dtaniwaki.akka_pusher.PusherModels._
+import com.github.dtaniwaki.akka_pusher.Utils._
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
+import spray.http.Uri
+import spray.json._
 
-import Utils._
-import PusherModels._
-import PusherExceptions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.Success
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
   extends PusherJsonSupport
@@ -47,21 +44,25 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   else
     "http"
 
-  def trigger(event: String, channel: String, message: String, socketId: Option[String] = None): Future[Result] = {
+  def trigger[T](channel: String, event: String, data: T, socketId: Option[String] = None)(implicit writer: JsonWriter[T]): Future[Result] = {
     validateChannel(channel)
     socketId.map(validateSocketId)
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
-    val data = Map(
-      "data" -> Some(Map("message" -> message).toJson.toString),
+    val body = JsObject(Map(
+      "data" -> Some(data.toJson.compactPrint),
       "name" -> Some(event),
       "channel" -> Some(channel),
       "socket_id" -> socketId
-    ).filter(_._2.isDefined).mapValues(_.get)
+    )
+      .filter(_._2.isDefined)
+      .mapValues(_.get)
+      .mapValues(JsString(_)))
+      .toString
 
-    uri = signUri("POST", uri, Some(data))
+    uri = signUri("POST", uri, Some(body))
 
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), data.toJson.compactPrint))).map{ new Result(_) }
+    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
   }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
@@ -135,7 +136,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     Uri(scheme = scheme, authority = Uri.Authority(Uri.Host(host)), path = path)
   }
 
-  private def signUri(method: String, uri: Uri, data: Option[Map[String, String]] = None): Uri = {
+  private def signUri(method: String, uri: Uri, data: Option[String] = None): Uri = {
     var signedUri = uri
     var params = List(
       ("auth_key", key),
@@ -143,7 +144,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       ("auth_version", "1.0")
     )
     if (data.isDefined) {
-      val serializedData = data.get.toJson.compactPrint
+      val serializedData = data.get
       params = params :+ ("body_md5", md5(serializedData))
     }
     signedUri = signedUri.withQuery(params ++ uri.query.toList: _*)
