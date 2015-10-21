@@ -33,7 +33,7 @@ class PusherClientSpec extends Specification
         override def request(req: HttpRequest) = Future("")
       }
 
-      val res = pusher.trigger("event", "channel", "message", Some("123.234"))
+      val res = pusher.trigger("channel", "event", "message", Some("123.234"))
       awaitResult(res) === Result("")
     }
     "without socket" in {
@@ -42,7 +42,7 @@ class PusherClientSpec extends Specification
           override def request(req: HttpRequest) = Future("")
         }
 
-        val res = pusher.trigger("event", "channel", "message")
+        val res = pusher.trigger("channel", "event", "message")
         awaitResult(res) === Result("")
       }
     }
