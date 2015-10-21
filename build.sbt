@@ -5,7 +5,6 @@ name := "akka-pusher"
 scalaVersion := "2.11.7"
 
 scalacOptions += "-deprecation"
-javaOptions += "-Dconfig.resource=akka-pusher-test.conf"
 
 val akkaV = "2.3.14"
 val akkaHttpV = "1.0"
