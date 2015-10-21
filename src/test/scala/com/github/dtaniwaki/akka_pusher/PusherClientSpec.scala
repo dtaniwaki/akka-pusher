@@ -7,7 +7,6 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import spray.json.DefaultJsonProtocol._
-import spray.json.JsString
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -34,7 +33,7 @@ class PusherClientSpec extends Specification
         override def request(req: HttpRequest) = Future("")
       }
 
-      val res = pusher.trigger("channel", "event", JsString("message"), Some("123.234"))
+      val res = pusher.trigger("channel", "event", "message", Some("123.234"))
       awaitResult(res) === Result("")
     }
     "without socket" in {
@@ -43,7 +42,7 @@ class PusherClientSpec extends Specification
           override def request(req: HttpRequest) = Future("")
         }
 
-        val res = pusher.trigger("channel", "event", JsString("message"))
+        val res = pusher.trigger("channel", "event", "message")
         awaitResult(res) === Result("")
       }
     }

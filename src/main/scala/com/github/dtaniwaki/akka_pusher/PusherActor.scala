@@ -1,10 +1,9 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json.DefaultJsonProtocol._
 import akka.actor._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
-import spray.json.JsString
+import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -15,7 +14,7 @@ class PusherActor extends Actor with StrictLogging {
 
   override def receive: Receive = {
     case TriggerMessage(channel, event, message, socketId) =>
-      sender ! new ResponseMessage(Await.result(pusher.trigger(channel, event, JsString(message), socketId), 5 seconds))
+      sender ! new ResponseMessage(Await.result(pusher.trigger(channel, event, message, socketId), 5 seconds))
     case ChannelMessage(channel, attributes) =>
       sender ! new ResponseMessage(Await.result(pusher.channel(channel, attributes), 5 seconds))
     case ChannelsMessage(prefixFilter, attributes) =>
