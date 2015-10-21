@@ -7,7 +7,7 @@ object PusherMessages {
   case class TriggerMessage(
     channel: String,
     event: String,
-    message: String,
+    message: JsValue,
     socketId: Option[String] = None
   )
   case class ChannelMessage(

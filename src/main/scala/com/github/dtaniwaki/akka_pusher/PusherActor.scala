@@ -1,9 +1,9 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json.DefaultJsonProtocol._
 import akka.actor._
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
+import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
