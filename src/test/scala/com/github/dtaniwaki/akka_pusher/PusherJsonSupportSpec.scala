@@ -1,6 +1,8 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json._
+import com.github.dtaniwaki.akka_pusher.PusherEvents._
+import com.github.dtaniwaki.akka_pusher.PusherRequests._
+import com.github.nscala_time.time.Imports._
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import org.joda.time.format._
@@ -9,6 +11,7 @@ import com.github.nscala_time.time.Imports._
 import PusherRequests._
 import PusherEvents._
 import PusherModels._
+import spray.json._
 
 class PusherJsonSupportSpec extends Specification
   with SpecHelper
@@ -31,6 +34,9 @@ class PusherJsonSupportSpec extends Specification
     "with invalid event" in {
       "does not read from json object" in {
         """{"time_ms": 12345, "events":[{"name":"invalid_event", "channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List())
+      }
+      "does not read from json object without name" in {
+        """{"time_ms": 12345, "events":[{"channel": "test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List())
       }
     }
     "with client event" in {
