@@ -2,6 +2,7 @@
 
 [![Maven Central][maven-image]][maven-link]
 [![Circle CI][circle-ci-image]][circle-ci-link]
+[![License: MIT](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Pusher Client under Akka's actor context.
 
