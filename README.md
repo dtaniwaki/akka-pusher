@@ -36,6 +36,49 @@ val pusherActor = system.actorOf(PusherActor.props(), "pusher-actor")
 pusherActor ! TriggerMessage("test_channel", "my_event", "hello world")
 ```
 
+The working example is [here](https://github.com/dtaniwaki/akka-pusher-test-app)
+
+### API
+
+#### trigger
+
+```scala
+val result: Future[Result] = pusher.trigger("test_channel", "my_event", Map("foo" -> "bar"))
+```
+
+#### channels
+
+```scala
+val channels: Future[Map[String, Channel]] = pusher.channels("my_")
+```
+
+#### channel
+
+```scala
+val channel: Future[Channel] = pusher.channel("my_channel")
+```
+
+#### users
+
+```scala
+val users: Future[List[User]] = pusher.users("my_channel")
+```
+
+#### authenticate
+
+```scala
+case class Foo(body: String)
+implicit val FooJsonSupport = jsonFormat1(Foo)
+val channelData: ChannelData[Foo] = ChannelData("user_id", Foo("body"))
+val params: AuthenticatedParams = authenticate("my_channel", "socket_id", Some(channelData))
+```
+
+#### validateSignature
+
+```scala
+val valid: Signature = validateSignature("pusher_key", "pusher_signature", "body")
+```
+
 ## Configuration
 
 PusherClient use `application.conf` parsed by [typesafe config](https://github.com/typesafehub/config).
