@@ -1,5 +1,6 @@
 # akka-pusher
 
+[![Maven Central][maven-image]][maven-link]
 [![Circle CI][circle-ci-image]][circle-ci-link]
 
 Pusher Client under Akka's actor context.
@@ -125,3 +126,5 @@ Copyright (c) 2015 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 
 [circle-ci-image]:  https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master.png?style=badge
 [circle-ci-link]:   https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master
+[maven-image]:  https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11/badge.svg?style=plastic
+[maven-link]:   https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11
