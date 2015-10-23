@@ -27,6 +27,10 @@ libraryDependencies ++= Seq(
   "org.specs2"          %%  "specs2-mock"   % specs2V % "test"
 )
 
+javaOptions in Test ++= Seq(
+  s"-Djava.util.Arrays.useLegacyMergeSort=true"
+)
+
 publishArtifact in Test := false
 publishMavenStyle := true
 pomIncludeRepository := { _ => false }
