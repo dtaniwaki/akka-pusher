@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "io.spray"            %%  "spray-http"    % "1.3.2",
   "io.spray"            %%  "spray-json"    % "1.3.2",
   "com.typesafe"        %   "config"        % "1.3.0",
+  "net.ceedubs"         %%  "ficus"         % "1.1.2",
   "com.typesafe.scala-logging" %%  "scala-logging" % "3.1.0",
   "com.github.nscala-time" %% "nscala-time" % "2.2.0",
   "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
