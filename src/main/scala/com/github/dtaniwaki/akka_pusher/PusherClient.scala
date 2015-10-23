@@ -33,14 +33,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
 
   implicit val materializer = ActorMaterializer()(system)
-  private val pool = if (ssl)
-    Http(system).cachedHostConnectionPoolTls[Int](host)
-  else
-    Http(system).cachedHostConnectionPool[Int](host)
-  private val scheme = if (ssl)
-    "https"
-  else
-    "http"
+
+  private val (pool, scheme) = if (ssl) {
+    (Http(system).cachedHostConnectionPoolTls[Int](host), "https")
+  } else {
+    (Http(system).cachedHostConnectionPool[Int](host), "http")
+  }
 
   def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String] = None): Future[Result] = {
     validateChannel(channel)
@@ -155,7 +153,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     sha256(secret, value)
   }
 
-  def shutdown() = {
+  def shutdown(): Unit = {
     Http(system).shutdownAllConnectionPools()
   }
 }

@@ -6,26 +6,22 @@ trait PusherValidator {
   private val channelPattern = """^([A-Za-z0-9_\-=@,.;]+)$""".r
   private val socketIdPattern = """^(\d+\.\d+)$""".r
 
-  def validateChannel(channel: String): Boolean = {
+  def validateChannel(channel: String): Unit = {
     if (200 < channel.length) {
       throw new PusherException(s"The channel is too long: $channel")
     }
     channel match {
       case channelPattern(_) =>
-        return true
       case _ =>
         throw new PusherException(s"The channel is invalid: $channel")
     }
-    return false
   }
 
-  def validateSocketId(socketId: String): Boolean = {
+  def validateSocketId(socketId: String): Unit = {
     socketId match {
       case socketIdPattern(_) =>
-        return true
       case _ =>
         throw new PusherException(s"The socketId is invalid: $socketId")
     }
-    return false
   }
 }

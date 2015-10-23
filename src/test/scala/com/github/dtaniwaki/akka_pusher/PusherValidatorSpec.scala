@@ -14,13 +14,17 @@ class PusherValidatorSpec extends Specification
     "be valid" in {
       val channel = "channel"
 
-      validateChannel(channel) === true
+      {
+        validateChannel(channel)
+      } must not(throwA[Exception])
     }
     "200 length" in {
       "be valid" in {
         val channel = (for (n <- 1 to 200) yield("a")).mkString
 
-        validateChannel(channel) === true
+        {
+          validateChannel(channel)
+        } must not(throwA[Exception])
       }
     }
     "more than 200 length" in {
@@ -46,7 +50,9 @@ class PusherValidatorSpec extends Specification
     "be valid" in {
       val socketId = "123.234"
 
-      validateSocketId(socketId)
+      {
+        validateSocketId(socketId)
+      } must not(throwA[Exception])
     }
     "with invalid characters" in {
       "be invalid" in {

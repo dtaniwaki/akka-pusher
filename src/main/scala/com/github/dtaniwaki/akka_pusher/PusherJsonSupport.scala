@@ -45,7 +45,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     }
   }
 
-  implicit def ChannelDataJsonWriterSupport[T](implicit writer: JsonWriter[T]) = new JsonWriter[ChannelData[T]] {
+  implicit def channelDataJsonWriterSupport[T](implicit writer: JsonWriter[T]): JsonWriter[ChannelData[T]] = new JsonWriter[ChannelData[T]] {
     override def write(data: ChannelData[T]): JsValue =
       data.userInfo.map { info =>
         JsObject(
@@ -57,7 +57,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
       }
   }
 
-  implicit def ChannelDataJsonReaderSupport[T](implicit writer: JsonReader[T]) = new JsonReader[ChannelData[T]] {
+  implicit def channelDataJsonReaderSupport[T](implicit writer: JsonReader[T]): JsonReader[ChannelData[T]] = new JsonReader[ChannelData[T]] {
     override def read(json: JsValue): ChannelData[T] =
       json.asJsObject.getFields("user_id", "user_info") match {
         case Seq(JsString(userId), userInfo) =>
@@ -88,14 +88,14 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
         case Seq(JsNumber(timeMs), JsArray(events)) =>
           WebhookRequest(new DateTime(timeMs.toLong * 1000), events.map { event =>
             event.asJsObject.getFields("name") match {
-              case Seq(JsString("client_event"))     => event.convertTo[ClientEvent]
-              case Seq(JsString("channel_occupied")) => event.convertTo[ChannelOccupiedEvent]
-              case Seq(JsString("channel_vacated"))  => event.convertTo[ChannelVacatedEvent]
-              case Seq(JsString("member_added"))     => event.convertTo[MemberAddedEvent]
-              case Seq(JsString("member_removed"))   => event.convertTo[MemberRemovedEvent]
-              case _ => null
+              case Seq(JsString("client_event"))     => Some(event.convertTo[ClientEvent])
+              case Seq(JsString("channel_occupied")) => Some(event.convertTo[ChannelOccupiedEvent])
+              case Seq(JsString("channel_vacated"))  => Some(event.convertTo[ChannelVacatedEvent])
+              case Seq(JsString("member_added"))     => Some(event.convertTo[MemberAddedEvent])
+              case Seq(JsString("member_removed"))   => Some(event.convertTo[MemberRemovedEvent])
+              case _ => None
             }
-          }.filter(_ != null))
+          }.filter(_.isDefined).map(_.get))
         case x => deserializationError("WebhookRequest is expected: " + x)
       }
     }

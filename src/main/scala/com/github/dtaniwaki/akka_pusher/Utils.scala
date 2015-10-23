@@ -6,25 +6,28 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 object Utils {
-  def byteArrayToString(data: Array[Byte]) = {
-    val bigInteger = new BigInteger(1, data)
-    var hash = bigInteger.toString(16)
+  val HEX = 16
+  val LENGTH = 32
 
-    while (hash.length() < 32) {
+  def byteArrayToString(data: Array[Byte]): String = {
+    val bigInteger = new BigInteger(1, data)
+    var hash = bigInteger.toString(HEX)
+
+    while (hash.length() < LENGTH) {
       hash = "0" + hash
     }
 
     hash
   }
 
-  def md5(string: String) = {
+  def md5(string: String): String = {
     val bytesOfMessage = string.getBytes("UTF-8")
     val md = MessageDigest.getInstance("MD5")
     val digest = md.digest(bytesOfMessage)
     byteArrayToString(digest)
   }
 
-  def sha256(secret: String, string: String) = {
+  def sha256(secret: String, string: String): String = {
     val signingKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256")
 
     val mac = Mac.getInstance("HmacSHA256")

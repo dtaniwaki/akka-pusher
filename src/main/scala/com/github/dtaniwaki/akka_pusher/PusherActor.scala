@@ -29,7 +29,7 @@ class PusherActor extends Actor with StrictLogging {
       logger.info(s"Unknown event: $message")
   }
 
-  override def postStop() = {
+  override def postStop(): Unit = {
     super.postStop()
     pusher.shutdown()
   }
