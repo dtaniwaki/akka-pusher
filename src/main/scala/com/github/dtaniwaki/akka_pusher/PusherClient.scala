@@ -11,6 +11,7 @@ import com.github.dtaniwaki.akka_pusher.PusherExceptions._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
 import com.typesafe.config.{Config, ConfigFactory}
+import net.ceedubs.ficus.Ficus._
 import com.typesafe.scalalogging.StrictLogging
 import spray.http.Uri
 import spray.json._
@@ -25,14 +26,11 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   with StrictLogging
   with PusherValidator
 {
-  private val host = "api.pusherapp.com"
+  val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com")
   val appId = config.getString("pusher.appId")
   val key = config.getString("pusher.key")
   val secret = config.getString("pusher.secret")
-  private val ssl = if (config.hasPath("pusher.ssl"))
-    config.getBoolean("pusher.ssl")
-  else
-    false
+  val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
 
   implicit val materializer = ActorMaterializer()(system)
   private val pool = if (ssl)
