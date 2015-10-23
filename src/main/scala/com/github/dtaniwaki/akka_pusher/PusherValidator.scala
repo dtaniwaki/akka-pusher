@@ -7,21 +7,11 @@ trait PusherValidator {
   private val socketIdPattern = """^(\d+\.\d+)$""".r
 
   def validateChannel(channel: String): Unit = {
-    if (200 < channel.length) {
-      throw new PusherException(s"The channel is too long: $channel")
-    }
-    channel match {
-      case channelPattern(_) =>
-      case _ =>
-        throw new PusherException(s"The channel is invalid: $channel")
-    }
+    require(channel.length <= 200, s"The channel is too long: $channel")
+    require(channelPattern.findFirstIn(channel).isDefined, s"The channel is invalid: $channel")
   }
 
   def validateSocketId(socketId: String): Unit = {
-    socketId match {
-      case socketIdPattern(_) =>
-      case _ =>
-        throw new PusherException(s"The socketId is invalid: $socketId")
-    }
+    require(socketIdPattern.findFirstIn(socketId).isDefined, s"The socketId is invalid: $socketId")
   }
 }

@@ -3,8 +3,6 @@ package com.github.dtaniwaki.akka_pusher
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 
-import PusherExceptions._
-
 class PusherValidatorSpec extends Specification
   with SpecHelper
   with RandomSequentialExecution
@@ -33,7 +31,7 @@ class PusherValidatorSpec extends Specification
 
         {
           validateChannel(channel)
-        } must throwA(new PusherException(s"The channel is too long: $channel"))
+        } must throwA(new IllegalArgumentException(s"requirement failed: The channel is too long: $channel"))
       }
     }
     "with invalid characters" in {
@@ -42,7 +40,7 @@ class PusherValidatorSpec extends Specification
 
         {
           validateChannel(channel)
-        } must throwA(new PusherException(s"The channel is invalid: $channel"))
+        } must throwA(new IllegalArgumentException(s"requirement failed: The channel is invalid: $channel"))
       }
     }
   }
@@ -60,7 +58,7 @@ class PusherValidatorSpec extends Specification
 
         {
           validateSocketId(socketId)
-        } must throwA(new PusherException(s"The socketId is invalid: $socketId"))
+        } must throwA(new IllegalArgumentException(s"requirement failed: The socketId is invalid: $socketId"))
       }
     }
   }
