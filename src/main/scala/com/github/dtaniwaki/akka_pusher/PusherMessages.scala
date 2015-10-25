@@ -4,6 +4,12 @@ import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
 import spray.json.JsValue
 
 object PusherMessages {
+  case class TriggerMessageToChannels(
+    channels: Seq[String],
+    event: String,
+    message: JsValue,
+    socketId: Option[String] = None
+  )
   case class TriggerMessage(
     channel: String,
     event: String,
