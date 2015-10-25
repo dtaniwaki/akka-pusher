@@ -30,6 +30,26 @@ class PusherActorSpec extends Specification
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
 
   "#receive" should {
+    "with TriggerMessageToChannels containing socketId" in {
+      "returns ResponseMessage with Result" in {
+        val pusher = mock[PusherClient].smart
+        pusher.trigger(anyListOf[String], anyString, any, any)(any) returns Future(Result(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? TriggerMessageToChannels(List("channel1", "channel2"), "event", JsString("message"), Some("123.234"))
+        awaitResult(future) === ResponseMessage(Result(""))
+      }
+    }
+    "with TriggerMessageToChannels not containing socketId" in {
+      "returns ResponseMessage with Result" in {
+        val pusher = mock[PusherClient].smart
+        pusher.trigger(anyListOf[String], anyString, any)(any) returns Future(Result(""))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        val future = actorRef ? TriggerMessageToChannels(List("channel1", "channel2"), "event", JsString("message"), None)
+        awaitResult(future) === ResponseMessage(Result(""))
+      }
+    }
     "with TriggerMessage" in {
       "returns ResponseMessage with Result" in {
         val pusher = mock[PusherClient].smart
