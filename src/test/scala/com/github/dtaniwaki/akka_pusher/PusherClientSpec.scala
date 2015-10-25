@@ -142,4 +142,13 @@ class PusherClientSpec extends Specification
       }
     }
   }
+  "#shutdown" should {
+    "shutdown" in {
+      val pusher = new PusherClient()
+
+      {
+        pusher.shutdown()
+      } must not(throwA[Exception])
+    }
+  }
 }

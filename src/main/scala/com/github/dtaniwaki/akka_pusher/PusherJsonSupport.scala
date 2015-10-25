@@ -49,11 +49,12 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
   implicit def channelDataJsonReaderSupport[T](implicit writer: JsonReader[T]): JsonReader[ChannelData[T]] = new JsonReader[ChannelData[T]] {
     override def read(json: JsValue): ChannelData[T] =
       json.asJsObject.getFields("user_id", "user_info") match {
-        case Seq(JsString(userId), userInfo) =>
-          ChannelData(userId, Some(userInfo.convertTo[T]))
+        case Seq(JsString(userId)) =>
+          ChannelData[T](userId)
         case Seq(JsString(userId), JsNull) =>
           ChannelData[T](userId)
-        case x => deserializationError("ChannelData is expected: " + x)
+        case Seq(JsString(userId), userInfo) =>
+          ChannelData(userId, Some(userInfo.convertTo[T]))
       }
   }
 
@@ -85,7 +86,6 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
               case _ => None
             }
           }.filter(_.isDefined).map(_.get))
-        case x => deserializationError("WebhookRequest is expected: " + x)
       }
     }
   }

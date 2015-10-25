@@ -68,6 +68,36 @@ class PusherJsonSupportSpec extends Specification
         WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"channel_occupied", "channel":"test"}]}""".parseJson
       }
     }
+    "with channel_vacated event" in {
+      "read from json object" in {
+        val event = ChannelVacatedEvent("channel_vacated", "test")
+        """{"time_ms": 12345, "events":[{"name":"channel_vacated", "channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
+      }
+      "write to json object" in {
+        val event = ChannelVacatedEvent("channel_vacated", "test")
+        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"channel_vacated", "channel":"test"}]}""".parseJson
+      }
+    }
+    "with member_added event" in {
+      "read from json object" in {
+        val event = MemberAddedEvent("member_added", "test", "foo")
+        """{"time_ms": 12345, "events":[{"name":"member_added", "channel":"test", "user_id":"foo"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
+      }
+      "write to json object" in {
+        val event = MemberAddedEvent("member_added", "test", "foo")
+        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"member_added", "channel":"test", "user_id":"foo"}]}""".parseJson
+      }
+    }
+    "with member_removed event" in {
+      "read from json object" in {
+        val event = MemberRemovedEvent("member_removed", "test", "foo")
+        """{"time_ms": 12345, "events":[{"name":"member_removed", "channel":"test", "user_id":"foo"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
+      }
+      "write to json object" in {
+        val event = MemberRemovedEvent("member_removed", "test", "foo")
+        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"member_removed", "channel":"test", "user_id":"foo"}]}""".parseJson
+      }
+    }
     // TODO: Add specs for all the events individually
   }
   "ChannelMapJsonFormat" should {
@@ -141,6 +171,24 @@ class PusherJsonSupportSpec extends Specification
       "write to json object" in {
         val user = User("123")
         user.toJson === """{"id": "123"}""".parseJson
+      }
+    }
+  }
+  "channelDataJsonReaderSupport" should {
+    "read from json object" in {
+      val channelData = ChannelData("user", Some(Map("foo" -> "bar")))
+      """{"user_id": "user", "user_info": {"foo": "bar"}}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
+    }
+    "with null user info" in {
+      "read from json object" in {
+        val channelData = ChannelData("user")
+        """{"user_id": "user", "user_info": null}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
+      }
+    }
+    "without user info" in {
+      "read from json object" in {
+        val channelData = ChannelData("user")
+        """{"user_id": "user"}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
       }
     }
   }
