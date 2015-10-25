@@ -36,7 +36,7 @@ class PusherActorSpec extends Specification
         pusher.trigger(anyString, anyString, any, any)(any) returns Future(Result(""))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
-        val future = actorRef ? TriggerMessage("event", "channel", JsString("message"), Some("123.234"))
+        val future = actorRef ? TriggerMessage("channel", "event", JsString("message"), Some("123.234"))
         awaitResult(future) === ResponseMessage(Result(""))
       }
     }
