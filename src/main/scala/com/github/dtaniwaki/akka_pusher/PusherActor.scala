@@ -17,7 +17,7 @@ class PusherActor extends Actor with StrictLogging {
       someSocketId.fold(
         sender ! new ResponseMessage(Await.result(pusher.trigger(channels, event, message), 5 seconds))
       ) { socketId =>
-        sender ! new ResponseMessage(Await.result(pusher.trigger(channels, event, message, socketId), 5 seconds))
+        sender ! new ResponseMessage(Await.result(pusher.trigger(channels, event, message, Some(socketId)), 5 seconds))
       }
     case TriggerMessage(channel, event, message, socketId) =>
       sender ! new ResponseMessage(Await.result(pusher.trigger(channel, event, message, socketId), 5 seconds))

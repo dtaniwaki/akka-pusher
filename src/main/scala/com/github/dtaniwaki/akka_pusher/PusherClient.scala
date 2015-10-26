@@ -62,33 +62,21 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
   }
 
-  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T): Future[Result] = {
+  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T): Future[Result] = trigger(channels, event, data, None)
+  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String]): Future[Result] = {
     channels.foreach(validateChannel)
+    socketId.map(validateSocketId)
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
-    val body = JsObject(
-        "data" -> JsString(data.toJson.compactPrint),
-        "name" -> JsString(event),
-        "channels" -> JsArray(channels.map(JsString.apply).toVector)
-      )
-      .toString
-
-    uri = signUri("POST", uri, Some(body))
-
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
-  }
-
-  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: String): Future[Result] = {
-    channels.foreach(validateChannel)
-    validateSocketId(socketId)
-    var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
-
-    val body = JsObject(
+    var map: Map[String, JsValue] = Map(
       "data" -> JsString(data.toJson.compactPrint),
       "name" -> JsString(event),
-      "channels" -> JsArray(channels.map(JsString.apply).toVector),
-      "socket_id" -> JsString(socketId)
+      "channels" -> JsArray(channels.map(JsString.apply).toVector)
     )
+    if (socketId.isDefined) {
+      map = map + ("socket_id" -> JsString(socketId.get))
+    }
+    val body = JsObject(map)
       .toString
 
     uri = signUri("POST", uri, Some(body))
