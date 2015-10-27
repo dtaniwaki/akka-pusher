@@ -1,12 +1,11 @@
 package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
+import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.scalalogging.StrictLogging
 import spray.json.DefaultJsonProtocol._
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class PusherActor extends Actor with StrictLogging {
   implicit val system = ActorSystem("pusher")
@@ -14,13 +13,13 @@ class PusherActor extends Actor with StrictLogging {
 
   override def receive: Receive = {
     case TriggerMessage(channel, event, message, socketId) =>
-      sender ! new ResponseMessage(Await.result(pusher.trigger(channel, event, message, socketId), 5 seconds))
+      pusher.trigger(channel, event, message, socketId).map(new ResponseMessage(_)) pipeTo sender
     case ChannelMessage(channel, attributes) =>
-      sender ! new ResponseMessage(Await.result(pusher.channel(channel, attributes), 5 seconds))
+      pusher.channel(channel, attributes).map(new ResponseMessage(_)) pipeTo sender
     case ChannelsMessage(prefixFilter, attributes) =>
-      sender ! new ResponseMessage(Await.result(pusher.channels(prefixFilter, attributes), 5 seconds))
+      pusher.channels(prefixFilter, attributes).map(new ResponseMessage(_)) pipeTo sender
     case UsersMessage(channel) =>
-      sender ! new ResponseMessage(Await.result(pusher.users(channel), 5 seconds))
+      pusher.users(channel).map(new ResponseMessage(_)) pipeTo sender
     case AuthenticateMessage(channel, socketId, data) =>
       sender ! new ResponseMessage(pusher.authenticate(channel, socketId, data))
     case ValidateSignatureMessage(key, signature, body) =>
