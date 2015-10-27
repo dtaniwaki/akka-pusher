@@ -1,0 +1,16 @@
+language: scala
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+
+scala:
+  - 2.10.6
+  - 2.11.7
+
+jdk:
+  - oraclejdk8
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test -Djava.util.Arrays.useLegacyMergeSort=true
