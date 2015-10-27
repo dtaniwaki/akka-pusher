@@ -3,12 +3,11 @@ package com.github.dtaniwaki.akka_pusher
 import akka.actor._
 import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
-import com.typesafe.scalalogging.StrictLogging
 import spray.json.DefaultJsonProtocol._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class PusherActor extends Actor with StrictLogging {
+class PusherActor extends Actor {
   implicit val system = ActorSystem("pusher")
   val pusher = new PusherClient()
 

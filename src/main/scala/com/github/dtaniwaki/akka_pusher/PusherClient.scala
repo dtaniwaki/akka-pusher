@@ -12,7 +12,6 @@ import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
-import com.typesafe.scalalogging.StrictLogging
 import spray.http.Uri
 import spray.json._
 
@@ -23,7 +22,6 @@ import scala.util.Success
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
   extends PusherJsonSupport
-  with StrictLogging
   with PusherValidator
 {
   val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com")
