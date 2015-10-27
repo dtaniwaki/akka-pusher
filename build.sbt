@@ -3,6 +3,7 @@ organization := "com.github.dtaniwaki"
 name := "akka-pusher"
 
 scalaVersion := "2.11.7"
+crossScalaVersions := Seq("2.10.6", "2.11.7")
 
 scalacOptions += "-deprecation"
 
@@ -10,22 +11,33 @@ val akkaV = "2.3.14"
 val akkaHttpV = "1.0"
 val specs2V = "3.6.4"
 
-libraryDependencies ++= Seq(
+val developmentDependencies = Seq(
   "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
-  "com.typesafe.akka"   %%  "akka-testkit"  % akkaV % "test",
   "com.typesafe.akka"   %%  "akka-http-core-experimental" % akkaHttpV,
   "io.spray"            %%  "spray-http"    % "1.3.2",
   "io.spray"            %%  "spray-json"    % "1.3.2",
-  "com.typesafe"        %   "config"        % "1.3.0",
-  "net.ceedubs"         %%  "ficus"         % "1.1.2",
-  "com.typesafe.scala-logging" %%  "scala-logging" % "3.1.0",
   "com.github.nscala-time" %% "nscala-time" % "2.2.0",
-  "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
+  "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
+)
+val developmentDependencies_2_11 = Seq(
+  "net.ceedubs"                %% "ficus"         % "1.1.2"
+)
+val developmentDependencies_2_10 = Seq(
+  "net.ceedubs"                %% "ficus"             % "1.0.1"
+)
+val testDependencies = Seq(
+  "com.typesafe.akka"   %%  "akka-testkit"  % akkaV % "test",
   "org.specs2"          %%  "specs2-core"   % specs2V % "test",
   "org.specs2"          %%  "specs2-matcher" % specs2V % "test",
   "org.specs2"          %%  "specs2-matcher-extra" % specs2V % "test",
   "org.specs2"          %%  "specs2-mock"   % specs2V % "test"
 )
+libraryDependencies <++= (scalaVersion) {
+  case v if v.startsWith("2.10.") =>
+    developmentDependencies ++ developmentDependencies_2_10 ++ testDependencies
+  case v if v.startsWith("2.11.") =>
+    developmentDependencies ++ developmentDependencies_2_11 ++ testDependencies
+}
 
 javaOptions in Test ++= Seq(
   s"-Djava.util.Arrays.useLegacyMergeSort=true"
