@@ -6,6 +6,11 @@
 
 Pusher Client under Akka's actor context.
 
+## Prerequisites
+
+- Java 8 or higher
+- Scala 2.10 and Scala 2.11
+
 ## Installation
 
 Add the following to your sbt build (Scala 2.11.x):
