@@ -1,7 +1,7 @@
 # akka-pusher
 
 [![Maven Central][maven-image]][maven-link]
-[![Circle CI][circle-ci-image]][circle-ci-link]
+[![CI][ci-image]][ci-link]
 [![License: MIT](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Pusher Client under Akka's actor context.
@@ -125,7 +125,7 @@ sbt clean coverage test
 
 Copyright (c) 2015 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 
-[circle-ci-image]:  https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master.png?style=badge
-[circle-ci-link]:   https://circleci.com/gh/dtaniwaki/akka-pusher/tree/master
+[ci-image]:  https://travis-ci.org/dtaniwaki/akka-pusher.svg?branch=use-travis
+[ci-link]:   https://travis-ci.org/dtaniwaki/akka-pusher
 [maven-image]:  https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11/badge.svg?style=plastic
 [maven-link]:   https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11
