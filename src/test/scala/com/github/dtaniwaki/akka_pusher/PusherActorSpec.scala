@@ -94,5 +94,13 @@ class PusherActorSpec extends Specification
         awaitResult(future) === ResponseMessage(true)
       }
     }
+    "with unknown message" in {
+      "returns the exception" in {
+        val actorRef = system.actorOf(PusherActor.props())
+        val future = actorRef ? List("it", "is", "unknown")
+
+        { awaitResult(future) } must throwA(new RuntimeException("Unknown message: List(it, is, unknown)"))
+      }
+    }
   }
 }
