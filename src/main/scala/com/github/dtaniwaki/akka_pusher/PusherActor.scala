@@ -12,6 +12,12 @@ class PusherActor extends Actor with StrictLogging {
   val pusher = new PusherClient()
 
   override def receive: Receive = {
+    case TriggerMessageToChannels(channels, event, message, someSocketId) =>
+      someSocketId.fold(
+        sender ! new ResponseMessage(Await.result(pusher.trigger(channels, event, message), 5 seconds))
+      ) { socketId =>
+        sender ! new ResponseMessage(Await.result(pusher.trigger(channels, event, message, Some(socketId)), 5 seconds))
+      }
     case TriggerMessage(channel, event, message, socketId) =>
       pusher.trigger(channel, event, message, socketId).map(new ResponseMessage(_)) pipeTo sender
     case ChannelMessage(channel, attributes) =>
