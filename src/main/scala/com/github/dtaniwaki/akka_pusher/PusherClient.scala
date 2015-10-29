@@ -22,8 +22,7 @@ import scala.util.Success
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
   extends PusherJsonSupport
-  with PusherValidator
-{
+  with PusherValidator {
   val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com")
   val appId = config.getString("pusher.appId")
   val key = config.getString("pusher.key")
@@ -31,33 +30,30 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
 
   implicit val materializer = ActorMaterializer()(system)
-
   private val (pool, scheme) = if (ssl) {
     (Http(system).cachedHostConnectionPoolTls[Int](host), "https")
   } else {
     (Http(system).cachedHostConnectionPool[Int](host), "http")
   }
 
-  def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String] = None): Future[Result] = {
-    validateChannel(channel)
-    socketId.map(validateSocketId)
+  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Result] = {
+    channels.foreach(validateChannel)
+    socketId.map(validateSocketId(_))
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
-    val body = JsObject(Map(
-      "data" -> Some(data.toJson.compactPrint),
-      "name" -> Some(event),
-      "channel" -> Some(channel),
-      "socket_id" -> socketId
-    )
-      .filter(_._2.isDefined)
-      .mapValues(_.get)
-      .mapValues(JsString(_)))
-      .toString
+    val body = Map[String, JsValue](
+      "data" -> JsString(data.toJson.compactPrint),
+      "name" -> JsString(event),
+      "channels" -> JsArray(channels.map(JsString.apply).toVector),
+      "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
+    ).filter(_._2 != JsNull).toJson.compactPrint
 
     uri = signUri("POST", uri, Some(body))
 
     request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
   }
+  def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Result] = trigger(channel, event, data, None)
+  def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Result] = trigger(Seq(channel), event, data, socketId)
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
     validateChannel(channel)
