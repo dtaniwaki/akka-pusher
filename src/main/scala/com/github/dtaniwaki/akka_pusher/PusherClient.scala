@@ -41,12 +41,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     socketId.map(validateSocketId(_))
     var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
 
-    val body = JsObject(
+    val body = Map[String, JsValue](
       "data" -> JsString(data.toJson.compactPrint),
       "name" -> JsString(event),
       "channels" -> JsArray(channels.map(JsString.apply).toVector),
       "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
-    ).compactPrint
+    ).filter(_._2 != JsNull).toJson.compactPrint
 
     uri = signUri("POST", uri, Some(body))
 
