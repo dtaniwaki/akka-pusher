@@ -27,7 +27,7 @@ class PusherClientSpec extends Specification
       pusher.secret === "secret0"
     }
   }
-  "#trigger(channel: Seq[String], event: String, data: T, socketId: Option[String] = None)" should {
+  "#trigger(channels: Seq[String], event: String, data: T, socketId: Option[String] = None)" should {
     "make a request to the the channels" in {
       val pusher = new PusherClient() {
         override def request(req: HttpRequest) = Future("")
@@ -47,7 +47,7 @@ class PusherClientSpec extends Specification
       }
     }
   }
-  "#trigger(channels: String, event: String, data: T)" should {
+  "#trigger(channel: String, event: String, data: T)" should {
     "make a request to the channel" in {
       val pusher = new PusherClient() {
         override def request(req: HttpRequest) = Future("")
@@ -57,7 +57,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Result("")
     }
   }
-  "#trigger(channels: String, event: String, data: T, socketId: Option[String])" should {
+  "#trigger(channel: String, event: String, data: T, socketId: Option[String])" should {
     "make a request to the channel" in {
       val pusher = new PusherClient() {
         override def request(req: HttpRequest) = Future("")
