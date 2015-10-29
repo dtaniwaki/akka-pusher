@@ -18,7 +18,7 @@ import spray.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Success
+import scala.util.{Try, Success}
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
   extends PusherJsonSupport
@@ -99,10 +99,14 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     key == _key && signature(body) == _signature
   }
 
-  protected def request(req: HttpRequest): Future[String] = {
+  protected def source(req: HttpRequest): Future[(Try[HttpResponse], Int)] = {
     Source.single(req, 0)
     .via(pool)
     .runWith(Sink.head)
+  }
+
+  protected def request(req: HttpRequest): Future[String] = {
+    source(req)
     .flatMap {
       case (Success(response), _) =>
         response.entity.withContentType(ContentTypes.`application/json`)
