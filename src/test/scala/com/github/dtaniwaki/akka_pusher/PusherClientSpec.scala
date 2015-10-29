@@ -27,43 +27,43 @@ class PusherClientSpec extends Specification
       pusher.secret === "secret0"
     }
   }
-  "#trigger(channel: String, event: String, data: T, socketId: Option[String] = None)" should {
-    "make a request to pusher" in {
+  "#trigger(channel: Seq[String], event: String, data: T, socketId: Option[String] = None)" should {
+    "make a request to the the channels" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("")
+      }
+
+      val res = pusher.trigger(Seq("channel1", "channel2"), "event", "message", Some("123.234"))
+      awaitResult(res) === Result("")
+    }
+    "without socket" in {
+      "make a request to the channels" in {
+        val pusher = new PusherClient() {
+          override def request(req: HttpRequest) = Future("")
+        }
+
+        val res = pusher.trigger(Seq("channel1", "channel2"), "event", "message")
+        awaitResult(res) === Result("")
+      }
+    }
+  }
+  "#trigger(channels: String, event: String, data: T)" should {
+    "make a request to the channel" in {
+      val pusher = new PusherClient() {
+        override def request(req: HttpRequest) = Future("")
+      }
+
+      val res = pusher.trigger("channel", "event", "message")
+      awaitResult(res) === Result("")
+    }
+  }
+  "#trigger(channels: String, event: String, data: T, socketId: Option[String])" should {
+    "make a request to the channel" in {
       val pusher = new PusherClient() {
         override def request(req: HttpRequest) = Future("")
       }
 
       val res = pusher.trigger("channel", "event", "message", Some("123.234"))
-      awaitResult(res) === Result("")
-    }
-    "without socket" in {
-      "make a request to pusher" in {
-        val pusher = new PusherClient() {
-          override def request(req: HttpRequest) = Future("")
-        }
-
-        val res = pusher.trigger("channel", "event", "message")
-        awaitResult(res) === Result("")
-      }
-    }
-  }
-  "#trigger(channels: Seq[String], event: String, data: T)" should {
-    "make a request to pusher to the multiple channels" in {
-      val pusher = new PusherClient() {
-        override def request(req: HttpRequest) = Future("")
-      }
-
-      val res = pusher.trigger(List("channel1", "channel1"), "event", "message")
-      awaitResult(res) === Result("")
-    }
-  }
-  "#trigger(channels: Seq[String], event: String, data: T, socketId: String)" should {
-    "make a request to pusher to the multiple channels" in {
-      val pusher = new PusherClient() {
-        override def request(req: HttpRequest) = Future("")
-      }
-
-      val res = pusher.trigger(List("channel1", "channel1"), "event", "message", "123.234")
       awaitResult(res) === Result("")
     }
   }

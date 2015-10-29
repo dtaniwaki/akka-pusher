@@ -4,18 +4,17 @@ import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
 import spray.json.JsValue
 
 object PusherMessages {
-  case class TriggerMessageToChannels(
+  case class TriggerMessage(
     channels: Seq[String],
     event: String,
     message: JsValue,
     socketId: Option[String] = None
   )
-  case class TriggerMessage(
-    channel: String,
-    event: String,
-    message: JsValue,
-    socketId: Option[String] = None
-  )
+  object TriggerMessage {
+    def apply(channel: String, event: String, message: JsValue): TriggerMessage = apply(channel, event, message, None)
+    def apply(channel: String, event: String, message: JsValue, socketId: Option[String]): TriggerMessage =
+      new TriggerMessage(Seq(channel), event, message, socketId)
+  }
   case class ChannelMessage(
     channel: String,
     attributes: Option[Seq[String]] = None
