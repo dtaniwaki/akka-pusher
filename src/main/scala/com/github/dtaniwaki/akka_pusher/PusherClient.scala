@@ -25,10 +25,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   with PusherValidator {
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
-  val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com")
-  val appId = config.getString("pusher.appId")
-  val key = config.getString("pusher.key")
-  val secret = config.getString("pusher.secret")
+  val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
+  val appId = config.getString("pusher.appId").trim()
+  val key = config.getString("pusher.key").trim()
+  val secret = config.getString("pusher.secret").trim()
   val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
   logger.debug("PusherClient configuration:")
   logger.debug(s"appId........ ${appId}")
