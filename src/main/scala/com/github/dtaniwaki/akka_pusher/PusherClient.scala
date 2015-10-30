@@ -14,7 +14,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
 import spray.http.Uri
 import spray.json._
-
+import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -23,11 +23,18 @@ import scala.util.{Try, Success}
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
   extends PusherJsonSupport
   with PusherValidator {
+  private lazy val logger = LoggerFactory.getLogger(getClass)
+
   val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com")
   val appId = config.getString("pusher.appId")
   val key = config.getString("pusher.key")
   val secret = config.getString("pusher.secret")
   val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
+  logger.debug("PusherClient configuration:")
+  logger.debug(s"appId........ ${appId}")
+  logger.debug(s"key.......... ${key}")
+  logger.debug( "secret....... <masked>")
+  logger.debug(s"ssl.......... ${ssl}")
 
   implicit val materializer = ActorMaterializer()(system)
   private val (pool, scheme) = if (ssl) {

@@ -17,7 +17,8 @@ val developmentDependencies = Seq(
   "io.spray"            %%  "spray-http"    % "1.3.2",
   "io.spray"            %%  "spray-json"    % "1.3.2",
   "com.github.nscala-time" %% "nscala-time" % "2.2.0",
-  "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
+  "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
+  "org.slf4j"           %   "slf4j-api"     % "1.7.12"
 )
 val developmentDependencies_2_11 = Seq(
   "net.ceedubs"                %% "ficus"         % "1.1.2"
