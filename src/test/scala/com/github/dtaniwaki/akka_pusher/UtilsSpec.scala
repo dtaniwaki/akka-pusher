@@ -21,5 +21,9 @@ class UtilsSpec extends Specification
     "generate hex digest sha256" in {
       Utils.sha256("secret", "foo") === "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4"
     }
+    "generate hex digest sha256 of strings with 日本語" in {
+      Utils.sha256("secret", "Digest me 日本語") === "b52446253d26c4bd19c1200e310ddc8ff3678f3422b2df6c47b153209cadec0b"
+      // echo -n "Digest me 日本語" | openssl dgst -sha256 -hmac "secret"
+    }
   }
 }
