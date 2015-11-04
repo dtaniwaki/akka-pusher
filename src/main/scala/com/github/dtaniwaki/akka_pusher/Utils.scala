@@ -33,7 +33,7 @@ object Utils {
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(signingKey)
 
-    val digest = mac.doFinal(string.getBytes())
+    val digest = mac.doFinal(string.getBytes("UTF-8"))
 
     val bigInteger = new BigInteger(1, digest)
     String.format("%0" + (digest.length << 1) + "x", bigInteger)
