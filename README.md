@@ -43,7 +43,7 @@ val pusherActor = system.actorOf(PusherActor.props(), "pusher-actor")
 pusherActor ! TriggerMessage("test_channel", "my_event", "hello world")
 ```
 
-The working example is [here](https://github.com/dtaniwaki/akka-pusher-test-app)
+A working sample is available [here](https://github.com/dtaniwaki/akka-pusher-play-app).
 
 ### API
 
