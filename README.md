@@ -130,7 +130,7 @@ sbt clean coverage test
 
 Copyright (c) 2015 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 
-[ci-image]:  https://travis-ci.org/dtaniwaki/akka-pusher.svg?branch=use-travis
+[ci-image]:  https://travis-ci.org/dtaniwaki/akka-pusher.svg
 [ci-link]:   https://travis-ci.org/dtaniwaki/akka-pusher
 [maven-image]:  https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11/badge.svg?style=plastic
 [maven-link]:   https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11
