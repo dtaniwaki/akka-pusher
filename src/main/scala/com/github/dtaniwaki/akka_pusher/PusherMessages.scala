@@ -8,8 +8,7 @@ object PusherMessages {
     channels: Seq[String],
     event: String,
     message: JsValue,
-    socketId: Option[String] = None
-  )
+    socketId: Option[String] = None)
   object TriggerMessage {
     def apply(channel: String, event: String, message: JsValue): TriggerMessage = apply(channel, event, message, None)
     def apply(channel: String, event: String, message: JsValue, socketId: Option[String]): TriggerMessage =
@@ -17,26 +16,20 @@ object PusherMessages {
   }
   case class ChannelMessage(
     channel: String,
-    attributes: Option[Seq[String]] = None
-  )
+    attributes: Option[Seq[String]] = None)
   case class ChannelsMessage(
     prefixFilter: String,
-    attributes: Option[Seq[String]] = None
-  )
+    attributes: Option[Seq[String]] = None)
   case class UsersMessage(
-    channel: String
-  )
+    channel: String)
   case class AuthenticateMessage(
     socketId: String,
     channel: String,
-    data: Option[ChannelData[JsValue]] = None
-  )
+    data: Option[ChannelData[JsValue]] = None)
   case class ValidateSignatureMessage(
     key: String,
     signature: String,
-    body: String
-  )
+    body: String)
   case class ResponseMessage(
-    message: Any
-  )
+    message: Any)
 }

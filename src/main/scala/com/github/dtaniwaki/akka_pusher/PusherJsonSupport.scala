@@ -63,10 +63,10 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
     def write(res: WebhookRequest): JsValue = {
       val events = res.events.map {
         case event: ChannelOccupiedEvent => event.toJson
-        case event: ChannelVacatedEvent => event.toJson
-        case event: MemberAddedEvent => event.toJson
-        case event: MemberRemovedEvent => event.toJson
-        case event: ClientEvent => event.toJson
+        case event: ChannelVacatedEvent  => event.toJson
+        case event: MemberAddedEvent     => event.toJson
+        case event: MemberRemovedEvent   => event.toJson
+        case event: ClientEvent          => event.toJson
       }.toVector
       JsObject(
         "time_ms" -> JsNumber((res.timeMs.getMillis / 1000).toLong),
@@ -83,7 +83,7 @@ trait PusherJsonSupport extends DefaultJsonProtocol {
               case Seq(JsString("channel_vacated"))  => Some(event.convertTo[ChannelVacatedEvent])
               case Seq(JsString("member_added"))     => Some(event.convertTo[MemberAddedEvent])
               case Seq(JsString("member_removed"))   => Some(event.convertTo[MemberRemovedEvent])
-              case _ => None
+              case _                                 => None
             }
           }.filter(_.isDefined).map(_.get))
       }

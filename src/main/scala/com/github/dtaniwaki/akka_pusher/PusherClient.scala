@@ -6,11 +6,11 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.{ Sink, Source }
 import com.github.dtaniwaki.akka_pusher.PusherExceptions._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import spray.http.Uri
 import spray.json._
@@ -18,11 +18,11 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Try, Success}
+import scala.util.{ Try, Success }
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
-  extends PusherJsonSupport
-  with PusherValidator {
+    extends PusherJsonSupport
+    with PusherValidator {
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
   val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
@@ -33,7 +33,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   logger.debug("PusherClient configuration:")
   logger.debug(s"appId........ ${appId}")
   logger.debug(s"key.......... ${key}")
-  logger.debug( "secret....... <masked>")
+  logger.debug("secret....... <masked>")
   logger.debug(s"ssl.......... ${ssl}")
 
   implicit val materializer = ActorMaterializer()(system)
@@ -57,7 +57,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("POST", uri, Some(body))
 
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map{ new Result(_) }
+    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map { new Result(_) }
   }
   def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Result] = trigger(channel, event, data, None)
   def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Result] = trigger(Seq(channel), event, data, socketId)
@@ -108,29 +108,29 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   protected def source(req: HttpRequest): Future[(Try[HttpResponse], Int)] = {
     Source.single(req, 0)
-    .via(pool)
-    .runWith(Sink.head)
+      .via(pool)
+      .runWith(Sink.head)
   }
 
   protected def request(req: HttpRequest): Future[String] = {
     source(req)
-    .flatMap {
-      case (Success(response), _) =>
-        response.entity.withContentType(ContentTypes.`application/json`)
-        .toStrict(5 seconds)
-        .map(_.data.decodeString(response.entity.contentType.charset.value))
-        .map { body =>
-          response.status match {
-            case StatusCodes.OK => body
-            case StatusCodes.BadRequest => throw new BadRequest(body)
-            case StatusCodes.Unauthorized => throw new Unauthorized(body)
-            case StatusCodes.Forbidden => throw new Forbidden(body)
-            case _ => throw new PusherException(body)
-          }
-        }
-      case _ =>
-        throw new PusherException("Pusher request failed")
-    }
+      .flatMap {
+        case (Success(response), _) =>
+          response.entity.withContentType(ContentTypes.`application/json`)
+            .toStrict(5 seconds)
+            .map(_.data.decodeString(response.entity.contentType.charset.value))
+            .map { body =>
+              response.status match {
+                case StatusCodes.OK           => body
+                case StatusCodes.BadRequest   => throw new BadRequest(body)
+                case StatusCodes.Unauthorized => throw new Unauthorized(body)
+                case StatusCodes.Forbidden    => throw new Forbidden(body)
+                case _                        => throw new PusherException(body)
+              }
+            }
+        case _ =>
+          throw new PusherException("Pusher request failed")
+      }
   }
 
   private def generateUri(path: Uri.Path): Uri = {
