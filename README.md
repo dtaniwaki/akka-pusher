@@ -1,6 +1,7 @@
 # akka-pusher
 
 [![Maven Central][maven-image]][maven-link]
+[![Coverage][coverage-image]][coverage-link]
 [![CI][ci-image]][ci-link]
 [![License: MIT](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -134,3 +135,6 @@ Copyright (c) 2015 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 [ci-link]:   https://travis-ci.org/dtaniwaki/akka-pusher
 [maven-image]:  https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11/badge.svg?style=plastic
 [maven-link]:   https://maven-badges.herokuapp.com/maven-central/com.github.dtaniwaki/akka-pusher_2.11
+[coverage-image]: http://codecov.io/github/dtaniwaki/akka-pusher/coverage.svg
+[coverage-link]:  http://codecov.io/github/dtaniwaki/akka-pusher
+
