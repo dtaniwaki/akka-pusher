@@ -15,7 +15,7 @@ import net.ceedubs.ficus.Ficus._
 import spray.http.Uri
 import spray.json._
 import org.slf4j.LoggerFactory
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{ Try, Success }
@@ -42,6 +42,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   } else {
     (Http(system).cachedHostConnectionPool[Int](host), "http")
   }
+  implicit val ec: ExecutionContext = system.dispatcher
 
   def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Result] = {
     channels.foreach(validateChannel)

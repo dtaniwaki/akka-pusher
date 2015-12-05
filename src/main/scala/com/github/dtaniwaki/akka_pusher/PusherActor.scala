@@ -4,12 +4,13 @@ import akka.actor._
 import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import spray.json.DefaultJsonProtocol._
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class PusherActor extends Actor {
   implicit val system = ActorSystem("pusher")
   val pusher = new PusherClient()
+  implicit val ec: ExecutionContext = system.dispatcher
 
   override def receive: Receive = PartialFunction { message =>
     val future: Future[Any] = try {
