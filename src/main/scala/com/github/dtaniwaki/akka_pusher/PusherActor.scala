@@ -8,9 +8,9 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 class PusherActor extends Actor {
-  implicit val system = ActorSystem("pusher")
-  val pusher = new PusherClient()
+  implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
+  val pusher = new PusherClient()
 
   override def receive: Receive = PartialFunction { message =>
     val future: Future[Any] = try {
@@ -33,7 +33,8 @@ class PusherActor extends Actor {
     } catch {
       case e: Exception => sender ! Status.Failure(e); throw e
     }
-    future.map(new ResponseMessage(_)) pipeTo sender
+    if (!sender.eq(system.deadLetters) && !sender.eq(ActorRef.noSender))
+      future.map(new ResponseMessage(_)) pipeTo sender
   }
 
   override def postStop(): Unit = {
