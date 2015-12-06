@@ -47,7 +47,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Result] = {
     channels.foreach(validateChannel)
     socketId.map(validateSocketId(_))
-    var uri = generateUri(path = Uri.Path(s"/apps/$appId/events"))
+    var uri = generateUri(s"/apps/$appId/events")
 
     val body = Map[String, JsValue](
       "data" -> JsString(data.toJson.compactPrint),
@@ -65,7 +65,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
     validateChannel(channel)
-    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels/$channel"))
+    var uri = generateUri(s"/apps/$appId/channels/$channel")
 
     val params = Map(
       "info" -> attributes.map(_.mkString(","))
@@ -77,7 +77,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
 
   def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Map[String, Channel]] = {
-    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels"))
+    var uri = generateUri(s"/apps/$appId/channels")
 
     val params = Map(
       "filter_by_prefix" -> Some(prefixFilter),
@@ -91,7 +91,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
   def users(channel: String): Future[List[User]] = {
     validateChannel(channel)
-    var uri = generateUri(path = Uri.Path(s"/apps/$appId/channels/$channel/users"))
+    var uri = generateUri(s"/apps/$appId/channels/$channel/users")
     uri = signUri("GET", uri)
 
     request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[List[User]])
@@ -134,8 +134,8 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       }
   }
 
-  private def generateUri(path: Uri.Path): Uri = {
-    Uri(scheme = scheme, authority = Uri.Authority(Uri.Host(host)), path = path)
+  private def generateUri(path: String): Uri = {
+    Uri(scheme = scheme, authority = Uri.Authority(Uri.Host(host)), path = Uri.Path(path))
   }
 
   private def signUri(method: String, uri: Uri, data: Option[String] = None): Uri = {
