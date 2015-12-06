@@ -4,9 +4,8 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 
 class UtilsSpec extends Specification
-  with SpecHelper
-  with RandomSequentialExecution
-{
+    with SpecHelper
+    with RandomSequentialExecution {
   "#byteArrayToString" should {
     "convert a byte array to a string" in {
       Utils.byteArrayToString(Array[Byte](10, 11, 12)) === "000000000000000000000000000a0b0c"

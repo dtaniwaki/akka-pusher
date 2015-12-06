@@ -14,10 +14,9 @@ import PusherModels._
 import spray.json._
 
 class PusherJsonSupportSpec extends Specification
-  with SpecHelper
-  with RandomSequentialExecution
-  with PusherJsonSupport
-{
+    with SpecHelper
+    with RandomSequentialExecution
+    with PusherJsonSupport {
   "WebhookRequestJsonSupport" should {
     "with multiple different events" in {
       "read from json object" in {

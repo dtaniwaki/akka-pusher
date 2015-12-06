@@ -1,6 +1,6 @@
 package com.github.dtaniwaki.akka_pusher
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ ActorSystem, Props }
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
@@ -13,17 +13,16 @@ import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 class TestActor(_pusher: PusherClient) extends PusherActor {
   override val pusher = _pusher
 }
 
 class PusherActorSpec extends Specification
-  with SpecHelper
-  with RandomSequentialExecution
-  with Mockito
-{
+    with SpecHelper
+    with RandomSequentialExecution
+    with Mockito {
   implicit val system = ActorSystem("pusher")
   implicit val timeout = Timeout(5 seconds)
 

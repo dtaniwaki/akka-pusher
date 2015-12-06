@@ -4,10 +4,9 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 
 class PusherValidatorSpec extends Specification
-  with SpecHelper
-  with RandomSequentialExecution
-  with PusherValidator
-{
+    with SpecHelper
+    with RandomSequentialExecution
+    with PusherValidator {
   "#validateChannel" should {
     "be valid" in {
       val channel = "channel"
@@ -18,7 +17,7 @@ class PusherValidatorSpec extends Specification
     }
     "200 length" in {
       "be valid" in {
-        val channel = (for (n <- 1 to 200) yield("a")).mkString
+        val channel = (for (n <- 1 to 200) yield ("a")).mkString
 
         {
           validateChannel(channel)
@@ -27,7 +26,7 @@ class PusherValidatorSpec extends Specification
     }
     "more than 200 length" in {
       "be invalid" in {
-        val channel = (for (n <- 1 to 201) yield("a")).mkString
+        val channel = (for (n <- 1 to 201) yield ("a")).mkString
 
         {
           validateChannel(channel)
