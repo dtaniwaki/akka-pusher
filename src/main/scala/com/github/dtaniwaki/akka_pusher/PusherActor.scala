@@ -33,7 +33,8 @@ class PusherActor extends Actor {
     } catch {
       case e: Exception => sender ! Status.Failure(e); throw e
     }
-    future.map(new ResponseMessage(_)) pipeTo sender
+    if (!sender.eq(system.deadLetters) && !sender.eq(ActorRef.noSender))
+      future.map(new ResponseMessage(_)) pipeTo sender
   }
 
   override def postStop(): Unit = {
