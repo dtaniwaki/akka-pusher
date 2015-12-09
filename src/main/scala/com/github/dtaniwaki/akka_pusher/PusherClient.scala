@@ -2,6 +2,7 @@ package com.github.dtaniwaki.akka_pusher
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpMethod
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model._
@@ -24,6 +25,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     extends PusherJsonSupport
     with PusherValidator {
   private lazy val logger = LoggerFactory.getLogger(getClass)
+  private val defaultHeaders: List[HttpHeader] = List(headers.`User-Agent`(s"akka-pusher v${getClass.getPackage.getImplementationVersion}"))
 
   val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
   val appId = config.getString("pusher.appId").trim()
@@ -58,7 +60,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("POST", uri, Some(body))
 
-    request(HttpRequest(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body))).map { new Result(_) }
+    request(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body)).map { new Result(_) }
   }
   def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Result] = trigger(channel, event, data, None)
   def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Result] = trigger(Seq(channel), event, data, socketId)
@@ -73,7 +75,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[Channel])
+    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[Channel])
   }
 
   def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Map[String, Channel]] = {
@@ -86,7 +88,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[Map[String, Channel]])
+    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[Map[String, Channel]])
   }
 
   def users(channel: String): Future[List[User]] = {
@@ -94,7 +96,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     var uri = generateUri(s"/apps/$appId/channels/$channel/users")
     uri = signUri("GET", uri)
 
-    request(HttpRequest(method = GET, uri = uri.toString)).map(_.parseJson.convertTo[List[User]])
+    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[List[User]])
   }
 
   def authenticate[T: JsonWriter](channel: String, socketId: String, data: Option[ChannelData[T]] = Option.empty[ChannelData[String]]): AuthenticatedParams = {
@@ -113,8 +115,8 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       .runWith(Sink.head)
   }
 
-  protected def request(req: HttpRequest): Future[String] = {
-    source(req)
+  protected def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[String] = {
+    source(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders))
       .flatMap {
         case (Success(response), _) =>
           response.entity.withContentType(ContentTypes.`application/json`)
