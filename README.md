@@ -5,7 +5,7 @@
 [![CI][ci-image]][ci-link]
 [![License: MIT](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Pusher Client under Akka's actor context.
+[Pusher](https://pusher.com/) Client under Akka's actor context.
 
 ## Prerequisites
 
