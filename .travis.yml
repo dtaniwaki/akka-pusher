@@ -13,7 +13,9 @@ jdk:
   - oraclejdk8
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test -Djava.util.Arrays.useLegacyMergeSort=true
+  - sbt ++$TRAVIS_SCALA_VERSION clean
+  - sbt ++$TRAVIS_SCALA_VERSION coverage
+  - sbt ++$TRAVIS_SCALA_VERSION test -Djava.util.Arrays.useLegacyMergeSort=true
 
 before_install:
   - pip install --user codecov
