@@ -47,8 +47,8 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   implicit val ec: ExecutionContext = system.dispatcher
 
   def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Result] = {
-    channels.foreach(validateChannel)
-    socketId.map(validateSocketId(_))
+    validateChannel(channels)
+    validateSocketId(socketId)
     var uri = generateUri(s"/apps/$appId/events")
 
     val body = Map[String, JsValue](
