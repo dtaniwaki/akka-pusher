@@ -3,6 +3,7 @@ package com.github.dtaniwaki.akka_pusher
 import akka.actor.{ ActorSystem, Props }
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import org.specs2.mock.Mockito
@@ -10,14 +11,19 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import spray.json.DefaultJsonProtocol._
 import spray.json._
-
+import scala.collection.mutable.Queue
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
 import scala.util.Success
 
-class TestActor(_pusher: PusherClient) extends PusherActor {
+class TestActor(_pusher: PusherClient) extends PusherActor() {
   override val pusher = _pusher
+}
+
+class TestBatchActor(_pusher: PusherClient, _queue: Queue[BatchTriggerMessage]) extends PusherActor(ConfigFactory.parseString("""pusher: {batchTrigger: true}""")) {
+  override val pusher = _pusher
+  override val batchTriggerQueue = _queue
 }
 
 class PusherActorSpec extends Specification
@@ -120,6 +126,87 @@ class PusherActorSpec extends Specification
         try {
           val future = actorRef ? ValidateSignatureMessage("key", "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4", "foo")
           awaitResult(future) === true
+        } finally {
+          system.stop(actorRef)
+        }
+      }
+    }
+    "with BatchTriggerMessage" in {
+      "enqueue the message" in {
+        val pusher = mock[PusherClient].smart
+        val queue = mock[Queue[BatchTriggerMessage]].smart
+        pusher.trigger(anyString, anyString, any, any)(any) returns Future(Success(Result("")))
+        queue.enqueue(any)
+        val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+        try {
+          val message = BatchTriggerMessage("channel", "event", JsString("message"), Some("123.234"))
+          actorRef ! message
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(500)
+          there was no(pusher).trigger(anyString, anyString, any, any)(any)
+          there was one(queue).enqueue(message)
+        } finally {
+          system.stop(actorRef)
+        }
+      }
+    }
+    "with BatchTriggerTick" in {
+      "handle the batch trigger" in {
+        val pusher = mock[PusherClient].smart
+        val queue = Queue[BatchTriggerMessage]()
+        pusher.trigger(any)(any) returns Future(Success(Result("")))
+        val messages = Seq(
+          BatchTriggerMessage("channel1", "event1", JsString("message1"), Some("123.234")),
+          BatchTriggerMessage("channel1", "event2", JsString("message2"), Some("234.345"))
+        )
+        messages.foreach { message => queue.enqueue(message) }
+        val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+        try {
+          actorRef ! BatchTriggerTick()
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(500)
+          there was one(pusher).trigger(===(messages.map(BatchTriggerMessage.unapply(_).get)))(any)
+          queue.dequeueAll(_ => true).length === 0
+        } finally {
+          system.stop(actorRef)
+        }
+      }
+      "with more than 100 messages" in {
+        "handle the batch trigger in batches of 100 messages" in {
+          val pusher = mock[PusherClient].smart
+          val queue = Queue[BatchTriggerMessage]()
+          pusher.trigger(any)(any) returns Future(Success(Result("")))
+          val messages = for (n <- 0 to 102) yield BatchTriggerMessage(s"channel${n}", s"event${n}", JsString(s"message${n}"), Some("123.234"))
+          messages foreach { message => queue.enqueue(message) }
+          val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+          try {
+            actorRef ! BatchTriggerTick()
+            Thread.sleep(0) // yield to other threads
+            Thread.sleep(500)
+            there was one(pusher).trigger(===(messages.slice(0, 100).map(BatchTriggerMessage.unapply(_).get)))(any)
+            there was one(pusher).trigger(===(messages.slice(100, 103).map(BatchTriggerMessage.unapply(_).get)))(any)
+            queue.dequeueAll(_ => true).length === 0
+          } finally {
+            system.stop(actorRef)
+          }
+        }
+      }
+    }
+    "scheduler" should {
+      "send BatchTriggerTick periodically" in {
+        val pusher = mock[PusherClient].smart
+        val queue = mock[Queue[BatchTriggerMessage]].smart
+        pusher.trigger(any)(any) returns Future(Success(Result("")))
+        queue.dequeueAll(any) returns scala.collection.mutable.Seq[BatchTriggerMessage]()
+        val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+        try {
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(2500)
+          there was atLeastTwo(queue).dequeueAll(anyFunction1)
         } finally {
           system.stop(actorRef)
         }
