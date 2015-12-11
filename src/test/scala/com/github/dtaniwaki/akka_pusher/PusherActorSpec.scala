@@ -142,7 +142,8 @@ class PusherActorSpec extends Specification
         try {
           val message = BatchTriggerMessage("channel", "event", JsString("message"), Some("123.234"))
           actorRef ! message
-          Thread.sleep(100)
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(500)
           there was no(pusher).trigger(anyString, anyString, any, any)(any)
           there was one(queue).enqueue(message)
         } finally {
@@ -164,7 +165,8 @@ class PusherActorSpec extends Specification
 
         try {
           actorRef ! BatchTriggerTick()
-          Thread.sleep(10)
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(500)
           there was one(pusher).trigger(===(messages.map(BatchTriggerMessage.unapply(_).get)))(any)
           queue.dequeueAll(_ => true).length === 0
         } finally {
@@ -182,7 +184,8 @@ class PusherActorSpec extends Specification
 
           try {
             actorRef ! BatchTriggerTick()
-            Thread.sleep(10)
+            Thread.sleep(0) // yield to other threads
+            Thread.sleep(500)
             there was one(pusher).trigger(===(messages.slice(0, 100).map(BatchTriggerMessage.unapply(_).get)))(any)
             there was one(pusher).trigger(===(messages.slice(100, 103).map(BatchTriggerMessage.unapply(_).get)))(any)
             queue.dequeueAll(_ => true).length === 0
@@ -201,6 +204,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
 
         try {
+          Thread.sleep(0) // yield to other threads
           Thread.sleep(2500)
           there was atLeastTwo(queue).dequeueAll(anyFunction1)
         } finally {
