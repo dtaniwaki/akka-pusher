@@ -133,7 +133,7 @@ The trigger will be executed in batch in 1000 milliseconds (default).
 }
 ```
 
-####
+#### UserMessage
 
 ```scala
 (pusherActor ask UsersMessage("channel-name")).map {
