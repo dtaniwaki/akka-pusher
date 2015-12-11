@@ -119,6 +119,8 @@ sbt test
 sbt clean coverage test
 ```
 
+![codecov.io](https://codecov.io/github/dtaniwaki/akka-pusher/branch.svg?branch=master)
+
 ## Contributing
 
 1. Fork it
