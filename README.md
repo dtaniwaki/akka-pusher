@@ -51,31 +51,31 @@ A working sample is available [here](https://github.com/dtaniwaki/akka-pusher-pl
 #### trigger
 
 ```scala
-val result: Future[Result] = pusher.trigger("test_channel", "my_event", Map("foo" -> "bar"))
+val result: Future[Try[Result]] = pusher.trigger("test_channel", "my_event", Map("foo" -> "bar"))
 ```
 
 #### batch trigger
 
 ```scala
-val result: Future[Result] = pusher.trigger(Seq(("test_channel", "my_event", Map("foo" -> "bar"))))
+val result: Future[Try[Result]] = pusher.trigger(Seq(("test_channel", "my_event", Map("foo" -> "bar"))))
 ```
 
 #### channels
 
 ```scala
-val channels: Future[Map[String, Channel]] = pusher.channels("my_")
+val channels: Future[Try[Map[String, Channel]]] = pusher.channels("my_")
 ```
 
 #### channel
 
 ```scala
-val channel: Future[Channel] = pusher.channel("my_channel")
+val channel: Future[Try[Channel]] = pusher.channel("my_channel")
 ```
 
 #### users
 
 ```scala
-val users: Future[List[User]] = pusher.users("my_channel")
+val users: Future[Try[List[User]]] = pusher.users("my_channel")
 ```
 
 #### authenticate
