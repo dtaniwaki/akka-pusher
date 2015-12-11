@@ -67,6 +67,26 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
   def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Try[Result]] = trigger(channel, event, data, None)
   def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Try[Result]] = trigger(Seq(channel), event, data, socketId)
+  def trigger[T: JsonWriter](triggers: Seq[(String, String, T, Option[String])]): Future[Try[Result]] = {
+    validateTriggers(triggers)
+    var uri = generateUri(s"/apps/$appId/batch_events")
+
+    val body = JsObject("batch" -> JsArray(triggers.map {
+      case (channel, event, data, socketId) =>
+        Map[String, JsValue](
+          "data" -> JsString(data.toJson.compactPrint),
+          "name" -> JsString(event),
+          "channel" -> JsString(channel),
+          "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
+        ).filter(_._2 != JsNull).toJson
+    }.toVector)).compactPrint
+
+    uri = signUri("POST", uri, Some(body))
+    request(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body)).map(_.map { res =>
+      logger.debug(s"Sent ${triggers.length} events: ${triggers.slice(0, 3).map(_._2).mkString(", ")} ...")
+      new Result(res)
+    })
+  }
 
   def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Try[Channel]] = {
     validateChannel(channel)

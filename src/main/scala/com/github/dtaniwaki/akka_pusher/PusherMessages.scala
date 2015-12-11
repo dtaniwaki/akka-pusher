@@ -4,6 +4,12 @@ import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
 import spray.json.JsValue
 
 object PusherMessages {
+  case class BatchTriggerMessage(
+    channel: String,
+    event: String,
+    message: JsValue,
+    socketId: Option[String] = None)
+
   case class TriggerMessage(
     channels: Seq[String],
     event: String,
@@ -30,4 +36,5 @@ object PusherMessages {
     key: String,
     signature: String,
     body: String)
+  case class BatchTriggerTick()
 }

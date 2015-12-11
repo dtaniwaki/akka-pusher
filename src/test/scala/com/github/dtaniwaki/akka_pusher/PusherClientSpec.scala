@@ -146,6 +146,30 @@ class PusherClientSpec extends Specification
       )
     }
   }
+  "#trigger(Seq((channel: String, event: String, data: T, socketId: Option[String])))" should {
+    "make a request to the channels" in {
+      val mockedSource = mock[MockedSource]
+      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
+      mockedSource.hit(argument.capture()) returns createJsonResponse("")
+
+      val pusher = pusherStub(mockedSource)
+      val res = pusher.trigger(Seq(
+        ("channel1", "event1", "message1", Some("123.234")),
+        ("channel2", "event2", "message2", Some("234.345"))
+      ))
+      awaitResult(res) === Success(Result(""))
+
+      argument.getValue() must equalToHttpPostRequest(
+        """(http://api.pusherapp.com/apps/app/batch_events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+)""",
+        """
+          {"batch":[
+            {"data":"\"message1\"","name":"event1","channel":"channel1","socket_id":"123.234"},
+            {"data":"\"message2\"","name":"event2","channel":"channel2","socket_id":"234.345"}
+          ]}
+        """.parseJson
+      )
+    }
+  }
   "#channel" should {
     "make a request to pusher" in {
       val mockedSource = mock[MockedSource]
