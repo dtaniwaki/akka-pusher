@@ -93,6 +93,81 @@ val params: AuthenticatedParams = authenticate("my_channel", "socket_id", Some(c
 val valid: Signature = validateSignature("pusher_key", "pusher_signature", "body")
 ```
 
+### Akka Actor Messages
+
+#### TriggerMessage
+
+```scala
+(pusherActor ask TriggerMessage("channel-name", "event-name", "JSON OBJECT".toJson, Some("123.345"))).map {
+  case Success(res: PusherModels.Result) => println(res)
+  case Failure(e) => throw e
+}
+```
+
+#### BatchTriggerMessage
+
+Only availbale if the `batchTrigger` is `true` in the config file.
+
+```scala
+pusherActor ! BatchTriggerMessage(channel, event, body.toJson, socketId)
+```
+
+The trigger will be executed in batch in 1000 milliseconds (default).
+
+#### ChannelMessage
+
+```scala
+(pusherActor ask ChannelMessage("channel-name", Some(Seq("user_count")))).map {
+  case Success(res: PusherModels.Channel) => println(res)
+  case Failure(e) => throw e
+}
+```
+
+#### ChannelsMessage
+
+```scala
+(pusherActor ask ChannelsMessage("channel-name-prefix", Some(Seq("user_count")))).map {
+  case Success(res: Map[_, _]) if res.forall{ case (k, v) => k.isInstanceOf[String] && v.isInstanceOf[PusherModels.Channel] } =>
+    println(res.asInstanceOf[Map[String, PusherModels.Channel]])
+  case Failure(e) => throw e
+}
+```
+
+####
+
+```scala
+(pusherActor ask UsersMessage("channel-name")).map {
+  case Success(res: List[_]) if res.forall(_.isInstanceOf[PusherModels.User]) =>
+    println(res.asInstanceOf[List[PusherModels.User]])
+  case Failure(e) => throw e
+}
+```
+
+#### AuthenticateMessage
+
+```scala
+val pusherRequest = AuthRequest()
+(pusherActor ask AuthenticateMessage(
+  "channel-name",
+  Some("123.345"),
+  Some(PusherModels.ChannelData(userId = "dtaniwaki", userInfo = Some(Map("user_name" -> "dtaniwaki", "name" -> "Daisuke Taniwaki").toJson)))
+)).map {
+  case res: PusherModels.AuthenticatedParams =>
+    println(res)
+}
+```
+
+#### ValidateSignatureMessage
+
+```scala
+(pusherActor ask ValidateSignatureMessage(key, signature, request.body.toString)).map {
+  case Success(res) =>
+    println(res)
+  case Failure(e) =>
+    throw e
+}
+```
+
 ## Configuration
 
 PusherClient use `application.conf` parsed by [typesafe config](https://github.com/typesafehub/config).
