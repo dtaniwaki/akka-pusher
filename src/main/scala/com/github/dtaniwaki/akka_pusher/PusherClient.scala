@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Try, Success }
+import scala.util.{ Try, Success, Failure }
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
     extends PusherJsonSupport
@@ -46,9 +46,9 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
   implicit val ec: ExecutionContext = system.dispatcher
 
-  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Result] = {
-    channels.foreach(validateChannel)
-    socketId.map(validateSocketId(_))
+  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Try[Result]] = {
+    validateChannel(channels)
+    validateSocketId(socketId)
     var uri = generateUri(s"/apps/$appId/events")
 
     val body = Map[String, JsValue](
@@ -60,12 +60,15 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("POST", uri, Some(body))
 
-    request(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body)).map { new Result(_) }
+    request(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body)).map(_.map {
+      logger.debug(s"Sent 1 event: ${event}")
+      new Result(_)
+    })
   }
-  def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Result] = trigger(channel, event, data, None)
-  def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Result] = trigger(Seq(channel), event, data, socketId)
+  def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Try[Result]] = trigger(channel, event, data, None)
+  def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Try[Result]] = trigger(Seq(channel), event, data, socketId)
 
-  def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Channel] = {
+  def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Try[Channel]] = {
     validateChannel(channel)
     var uri = generateUri(s"/apps/$appId/channels/$channel")
 
@@ -75,10 +78,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[Channel])
+    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
 
-  def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Map[String, Channel]] = {
+  def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Try[Map[String, Channel]]] = {
     var uri = generateUri(s"/apps/$appId/channels")
 
     val params = Map(
@@ -88,15 +91,15 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[Map[String, Channel]])
+    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Map[String, Channel]]))
   }
 
-  def users(channel: String): Future[List[User]] = {
+  def users(channel: String): Future[Try[List[User]]] = {
     validateChannel(channel)
     var uri = generateUri(s"/apps/$appId/channels/$channel/users")
     uri = signUri("GET", uri)
 
-    request(method = GET, uri = uri.toString).map(_.parseJson.convertTo[List[User]])
+    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[List[User]]))
   }
 
   def authenticate[T: JsonWriter](channel: String, socketId: String, data: Option[ChannelData[T]] = Option.empty[ChannelData[String]]): AuthenticatedParams = {
@@ -115,7 +118,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       .runWith(Sink.head)
   }
 
-  protected def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[String] = {
+  protected def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[Try[String]] = {
     source(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders))
       .flatMap {
         case (Success(response), _) =>
@@ -124,15 +127,15 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
             .map(_.data.decodeString(response.entity.contentType.charset.value))
             .map { body =>
               response.status match {
-                case StatusCodes.OK           => body
-                case StatusCodes.BadRequest   => throw new BadRequest(body)
-                case StatusCodes.Unauthorized => throw new Unauthorized(body)
-                case StatusCodes.Forbidden    => throw new Forbidden(body)
-                case _                        => throw new PusherException(body)
+                case StatusCodes.OK           => Success(body)
+                case StatusCodes.BadRequest   => Failure(new BadRequest(body))
+                case StatusCodes.Unauthorized => Failure(new Unauthorized(body))
+                case StatusCodes.Forbidden    => Failure(new Forbidden(body))
+                case _                        => Failure(new PusherException(body))
               }
             }
         case _ =>
-          throw new PusherException("Pusher request failed")
+          Future(Failure(new PusherException("Pusher request failed")))
       }
   }
 

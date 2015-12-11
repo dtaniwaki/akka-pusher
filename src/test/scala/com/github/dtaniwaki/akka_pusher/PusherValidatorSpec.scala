@@ -7,7 +7,7 @@ class PusherValidatorSpec extends Specification
     with SpecHelper
     with RandomSequentialExecution
     with PusherValidator {
-  "#validateChannel" should {
+  "#validateChannel(String)" should {
     "be valid" in {
       val channel = "channel"
 
@@ -43,7 +43,43 @@ class PusherValidatorSpec extends Specification
       }
     }
   }
-  "#validateSocketId" should {
+  "#validateChannel(Seq[String])" should {
+    "be valid" in {
+      val channels = Seq("channel1", "channel2")
+
+      {
+        validateChannel(channels)
+      } must not(throwA[Exception])
+    }
+    "200 length" in {
+      "be valid" in {
+        val channels = Seq("channel1", (for (n <- 1 to 200) yield ("a")).mkString)
+
+        {
+          validateChannel(channels)
+        } must not(throwA[Exception])
+      }
+    }
+    "more than 200 length" in {
+      "be invalid" in {
+        val channels = Seq("channel1", (for (n <- 1 to 201) yield ("a")).mkString)
+
+        {
+          validateChannel(channels)
+        } must throwA(new IllegalArgumentException(s"requirement failed: The channel is too long: ${channels(1)}"))
+      }
+    }
+    "with invalid characters" in {
+      "be invalid" in {
+        val channels = Seq("channel1", "channel?")
+
+        {
+          validateChannel(channels)
+        } must throwA(new IllegalArgumentException(s"requirement failed: The channel is invalid: ${channels(1)}"))
+      }
+    }
+  }
+  "#validateSocketId(String)" should {
     "be valid" in {
       val socketId = "123.234"
 
@@ -58,6 +94,33 @@ class PusherValidatorSpec extends Specification
         {
           validateSocketId(socketId)
         } must throwA(new IllegalArgumentException(s"requirement failed: The socketId is invalid: $socketId"))
+      }
+    }
+  }
+  "#validateSocketId(Option[String])" should {
+    "be valid" in {
+      val maybeSocketId = Some("123.234")
+
+      {
+        validateSocketId(maybeSocketId)
+      } must not(throwA[Exception])
+    }
+    "with invalid characters" in {
+      "be invalid" in {
+        val maybeSocketId = Some("socket")
+
+        {
+          validateSocketId(maybeSocketId)
+        } must throwA(new IllegalArgumentException(s"requirement failed: The socketId is invalid: ${maybeSocketId.get}"))
+      }
+    }
+    "with None" in {
+      "be valid" in {
+        val maybeSocketId = None
+
+        {
+          validateSocketId(maybeSocketId)
+        } must not(throwA[Exception])
       }
     }
   }

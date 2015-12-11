@@ -10,8 +10,10 @@ trait PusherValidator {
     require(channel.length <= 200, s"The channel is too long: $channel")
     require(channelPattern.findFirstIn(channel).isDefined, s"The channel is invalid: $channel")
   }
+  def validateChannel(channels: Seq[String]): Unit = channels.foreach(validateChannel)
 
   def validateSocketId(socketId: String): Unit = {
     require(socketIdPattern.findFirstIn(socketId).isDefined, s"The socketId is invalid: $socketId")
   }
+  def validateSocketId(socketId: Option[String]): Unit = socketId.map(validateSocketId)
 }
