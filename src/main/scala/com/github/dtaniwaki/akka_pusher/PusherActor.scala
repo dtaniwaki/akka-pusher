@@ -3,11 +3,13 @@ package com.github.dtaniwaki.akka_pusher
 import akka.actor._
 import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
+import com.typesafe.config.{ Config, ConfigFactory }
 import spray.json.DefaultJsonProtocol._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import net.ceedubs.ficus.Ficus._
 
-class PusherActor extends Actor {
+class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
   implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
   val pusher = new PusherClient()
