@@ -7,11 +7,14 @@ import com.typesafe.config.{ Config, ConfigFactory }
 import spray.json.DefaultJsonProtocol._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import org.slf4j.LoggerFactory
 import net.ceedubs.ficus.Ficus._
 
 class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
   implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
+  private lazy val logger = LoggerFactory.getLogger(getClass)
+
   val pusher = new PusherClient()
 
   override def receive: Receive = PartialFunction { message =>
