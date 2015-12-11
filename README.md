@@ -54,6 +54,12 @@ A working sample is available [here](https://github.com/dtaniwaki/akka-pusher-pl
 val result: Future[Result] = pusher.trigger("test_channel", "my_event", Map("foo" -> "bar"))
 ```
 
+#### batch trigger
+
+```scala
+val result: Future[Result] = pusher.trigger(Seq(("test_channel", "my_event", Map("foo" -> "bar"))))
+```
+
 #### channels
 
 ```scala
