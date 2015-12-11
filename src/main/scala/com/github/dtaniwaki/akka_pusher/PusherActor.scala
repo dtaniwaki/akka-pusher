@@ -18,28 +18,30 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
   val pusher = new PusherClient()
 
   override def receive: Receive = PartialFunction { message =>
-    val future: Future[Any] = try {
-      message match {
-        case TriggerMessage(channel, event, message, socketId) =>
-          pusher.trigger(channel, event, message, socketId)
-        case ChannelMessage(channel, attributes) =>
-          pusher.channel(channel, attributes)
-        case ChannelsMessage(prefixFilter, attributes) =>
-          pusher.channels(prefixFilter, attributes)
-        case UsersMessage(channel) =>
-          pusher.users(channel)
-        case AuthenticateMessage(channel, socketId, data) =>
-          Future { pusher.authenticate(channel, socketId, data) }
-        case ValidateSignatureMessage(key, signature, body) =>
-          Future { pusher.validateSignature(key, signature, body) }
-        case message =>
-          throw new RuntimeException(s"Unknown message: $message")
-      }
-    } catch {
-      case e: Exception => sender ! Status.Failure(e); throw e
+    val res = message match {
+      case TriggerMessage(channel, event, message, socketId) =>
+        pusher.trigger(channel, event, message, socketId)
+      case ChannelMessage(channel, attributes) =>
+        pusher.channel(channel, attributes)
+      case ChannelsMessage(prefixFilter, attributes) =>
+        pusher.channels(prefixFilter, attributes)
+      case UsersMessage(channel) =>
+        pusher.users(channel)
+      case AuthenticateMessage(channel, socketId, data) =>
+        pusher.authenticate(channel, socketId, data)
+      case ValidateSignatureMessage(key, signature, body) =>
+        pusher.validateSignature(key, signature, body)
+      case _ =>
     }
-    if (!sender.eq(system.deadLetters) && !sender.eq(ActorRef.noSender))
-      future.map(new ResponseMessage(_)) pipeTo sender
+    if (!sender.eq(system.deadLetters) && !sender.eq(ActorRef.noSender)) {
+      res match {
+        case future: Future[_] =>
+          future pipeTo sender
+        case res if !res.isInstanceOf[Unit] =>
+          sender ! res
+        case _ =>
+      }
+    }
   }
 
   override def postStop(): Unit = {
