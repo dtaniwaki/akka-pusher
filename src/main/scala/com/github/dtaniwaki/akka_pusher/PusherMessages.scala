@@ -30,6 +30,4 @@ object PusherMessages {
     key: String,
     signature: String,
     body: String)
-  case class ResponseMessage(
-    message: Any)
 }

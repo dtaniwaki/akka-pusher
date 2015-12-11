@@ -14,6 +14,7 @@ import spray.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
+import scala.util.Success
 
 class TestActor(_pusher: PusherClient) extends PusherActor {
   override val pusher = _pusher
@@ -30,75 +31,98 @@ class PusherActorSpec extends Specification
 
   "#receive" should {
     "with TriggerMessage" in {
-      "returns ResponseMessage with Result" in {
+      "returns Result" in {
         val pusher = mock[PusherClient].smart
-        pusher.trigger(Seq(any), anyString, any, any)(any) returns Future(Result(""))
+        pusher.trigger(Seq(any), anyString, any, any)(any) returns Future(Success(Result("")))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
-        val future = actorRef ? TriggerMessage(Seq("channel1", "channel2"), "event", JsString("message"), Some("123.234"))
-        awaitResult(future) === ResponseMessage(Result(""))
+        try {
+          val future = actorRef ? TriggerMessage(Seq("channel1", "channel2"), "event", JsString("message"), Some("123.234"))
+          awaitResult(future) === Success(Result(""))
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
     "with ChannelMessage" in {
-      "returns ResponseMessage with Channel" in {
+      "returns Channel" in {
         val pusher = mock[PusherClient].smart
-        pusher.channel(anyString, any) returns Future(Channel())
+        pusher.channel(anyString, any) returns Future(Success(Channel()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
-        val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
-        awaitResult(future) === ResponseMessage(Channel())
+        try {
+          val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
+          awaitResult(future) === Success(Channel())
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
     "with ChannelsMessage" in {
-      "returns ResponseMessage with Channels" in {
+      "returns Channels" in {
         val pusher = mock[PusherClient].smart
-        pusher.channels(anyString, any) returns Future(Map[String, Channel]())
+        pusher.channels(anyString, any) returns Future(Success(Map[String, Channel]()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
-        val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
-        awaitResult(future) === ResponseMessage(Map[String, Channel]())
+        try {
+          val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
+          awaitResult(future) === Success(Map[String, Channel]())
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
     "with UsersMessage" in {
-      "returns ResponseMessage with Users" in {
+      "returns Users" in {
         val pusher = mock[PusherClient].smart
-        pusher.users(anyString) returns Future(List[User]())
+        pusher.users(anyString) returns Future(Success(List[User]()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
-        val future = actorRef ? UsersMessage("channel")
-        awaitResult(future) === ResponseMessage(List[User]())
+        try {
+          val future = actorRef ? UsersMessage("channel")
+          awaitResult(future) === Success(List[User]())
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
     "with AuthenticateMessage" in {
-      "returns ResponseMessage with AuthenticatedParams" in {
+      "returns AuthenticatedParams" in {
         val actorRef = system.actorOf(PusherActor.props())
-        val channelData = ChannelData(
-          userId = "test_user",
-          userInfo = Some(Map("foo" -> "bar").toJson)
-        )
-        val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
-        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5e76b03a1e16bda68b183aef8ca71fb2fad9773eae977ff3912bca2ec2d3a7e0", Some("""{"user_id":"test_user","user_info":{"foo":"bar"}}""")))
+
+        try {
+          val channelData = ChannelData(
+            userId = "test_user",
+            userInfo = Some(Map("foo" -> "bar").toJson)
+          )
+          val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
+          awaitResult(future) === AuthenticatedParams("key:5e76b03a1e16bda68b183aef8ca71fb2fad9773eae977ff3912bca2ec2d3a7e0", Some("""{"user_id":"test_user","user_info":{"foo":"bar"}}"""))
+        } finally {
+          system.stop(actorRef)
+        }
       }
-      "returns ResponseMessage with AuthenticatedParams, userInfo not included" in {
+      "returns AuthenticatedParams, userInfo not included" in {
         val actorRef = system.actorOf(PusherActor.props())
-        val channelData = ChannelData(userId = "test_user")
-        val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
-        awaitResult(future) === ResponseMessage(AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}""")))
+
+        try {
+          val channelData = ChannelData(userId = "test_user")
+          val future = actorRef ? AuthenticateMessage("GET", "123.234", Some(channelData))
+          awaitResult(future) === AuthenticatedParams("key:5be264b14524c93bafdc7dbc0bdba9dd782f00a2e310bcb55ef76b26b6841f44", Some("""{"user_id":"test_user"}"""))
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
     "with ValidateSignatureMessage" in {
-      "returns ResponseMessage with Boolean" in {
+      "returns Boolean" in {
         val actorRef = system.actorOf(PusherActor.props())
-        val future = actorRef ? ValidateSignatureMessage("key", "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4", "foo")
-        awaitResult(future) === ResponseMessage(true)
-      }
-    }
-    "with unknown message" in {
-      "returns the exception" in {
-        val actorRef = system.actorOf(PusherActor.props())
-        val future = actorRef ? List("it", "is", "unknown")
 
-        { awaitResult(future) } must throwA(new RuntimeException("Unknown message: List(it, is, unknown)"))
+        try {
+          val future = actorRef ? ValidateSignatureMessage("key", "773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4", "foo")
+          awaitResult(future) === true
+        } finally {
+          system.stop(actorRef)
+        }
       }
     }
   }
