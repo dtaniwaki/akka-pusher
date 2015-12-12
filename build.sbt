@@ -9,13 +9,13 @@ scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
 
 val akkaV = "2.3.14"
 val akkaHttpV = "1.0"
-val akkaJsonV = "1.0"
+val sprayJsonV = "1.3.2"
 val specs2V = "3.6.4"
 
 val developmentDependencies = Seq(
   "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
   "com.typesafe.akka"   %%  "akka-http-core-experimental" % akkaHttpV,
-  "com.typesafe.akka"   %%  "akka-http-spray-json-experimental" % akkaJsonV,
+  "io.spray"            %%  "spray-json" % sprayJsonV,
   "com.github.nscala-time" %% "nscala-time" % "2.2.0",
   "org.slf4j"           %   "slf4j-api"     % "1.7.12"
 )
