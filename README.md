@@ -104,12 +104,10 @@ val valid: Signature = validateSignature("pusher_key", "pusher_signature", "body
 }
 ```
 
-#### BatchTriggerMessage
-
-Only availbale if the `batchTrigger` is `true` in the config file.
+If the `batchTrigger` setting of `PusherActor` is `true`,
 
 ```scala
-pusherActor ! BatchTriggerMessage(channel, event, body.toJson, socketId)
+pusherActor ! TriggerMessage(channel, event, body.toJson, socketId)
 ```
 
 The trigger will be executed in batch in 1000 milliseconds (default).
