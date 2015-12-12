@@ -5,7 +5,7 @@ name := "akka-pusher"
 scalaVersion := "2.11.7"
 crossScalaVersions := Seq("2.10.6", "2.11.7")
 
-scalacOptions += "-deprecation"
+scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
 
 val akkaV = "2.3.14"
 val akkaHttpV = "1.0"
