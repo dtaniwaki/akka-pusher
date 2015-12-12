@@ -170,13 +170,15 @@ val pusherRequest = AuthRequest()
 
 ## Configuration
 
-PusherClient use `application.conf` parsed by [typesafe config](https://github.com/typesafehub/config).
+PusherClient use `pusher` scope in `application.conf` parsed by [typesafe config](https://github.com/typesafehub/config).
 
 ```
 pusher {
   appId=${?PUSHER_APP_ID}
   key=${?PUHSER_API_KEY}
   secret=${?PUSHER_API_SECRET}
+  batchTrigger=true
+  batchInterval=1000
 }
 ```
 
@@ -187,6 +189,14 @@ Or, you can directly set the config by the costructor argument.
 ```scala
 val pusher = new PusherClient(ConfigFactory.parseString("""pusher: {appId: "app0", key: "key0", secret: "secret0"}"""))
 ```
+
+| key            | type     | description |
+|---------------:|:---------|:------------|
+| `appId`        | `String` | Your pusher app ID. |
+| `key`          | `String` | Your pusher app key. |
+| `secret`       | `String` | Your pusher app secret. |
+| `batchTrigger` | `Boolean` (default: false) | Flag to enable batch trigger requests. The batch size is 100 as pusher limits it. |
+| `batchInterval` | `Int` (default: 1000) | Milliseconds to make batch trigger requests. |
 
 ## Test
 
