@@ -22,7 +22,7 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
   val batchNumber = 100
   val batchTrigger = config.as[Option[Boolean]]("pusher.batchTrigger").getOrElse(false)
   val batchInterval = Duration(config.as[Option[Int]]("pusher.batchInterval").getOrElse(1000), MILLISECONDS)
-  protected val batchTriggerQueue = Queue[BatchTriggerMessage]()
+  protected val batchTriggerQueue = Queue[TriggerMessage]()
   protected val scheduler = if (batchTrigger) {
     Some(system.scheduler.schedule(
       batchInterval,
@@ -41,6 +41,9 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
 
   override def receive: Receive = PartialFunction { message =>
     val res = message match {
+      case trigger: TriggerMessage if batchTrigger =>
+        batchTriggerQueue.enqueue(trigger)
+        true
       case TriggerMessage(channel, event, message, socketId) =>
         pusher.trigger(channel, event, message, socketId)
       case ChannelMessage(channel, attributes) =>
@@ -54,12 +57,12 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
       case ValidateSignatureMessage(key, signature, body) =>
         pusher.validateSignature(key, signature, body)
       case trigger: BatchTriggerMessage if batchTrigger =>
-        batchTriggerQueue.enqueue(trigger)
+        batchTriggerQueue.enqueue(TriggerMessage.tupled(BatchTriggerMessage.unapply(trigger).get))
         true
       case BatchTriggerTick() if batchTrigger =>
         val triggers = batchTriggerQueue.dequeueAll { _ => true }
         triggers.grouped(batchNumber) foreach { triggers =>
-          pusher.trigger(triggers.map(BatchTriggerMessage.unapply(_).get)).map {
+          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
             case Success(_) => // Do Nothing
             case Failure(e) => logger.warn(e.getMessage)
           }
