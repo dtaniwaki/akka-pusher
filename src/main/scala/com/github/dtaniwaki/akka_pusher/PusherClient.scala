@@ -13,7 +13,7 @@ import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
-import spray.http.Uri
+import akka.http.scaladsl.model.Uri
 import spray.json._
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
@@ -27,11 +27,11 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   private lazy val logger = LoggerFactory.getLogger(getClass)
   private val defaultHeaders: List[HttpHeader] = List(headers.`User-Agent`(s"akka-pusher v${getClass.getPackage.getImplementationVersion}"))
 
-  val host = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
-  val appId = config.getString("pusher.appId").trim()
-  val key = config.getString("pusher.key").trim()
-  val secret = config.getString("pusher.secret").trim()
-  val ssl = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
+  val host: String = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
+  val appId: String = config.getString("pusher.appId").trim()
+  val key: String = config.getString("pusher.key").trim()
+  val secret: String = config.getString("pusher.secret").trim()
+  val ssl: Boolean = config.as[Option[Boolean]]("pusher.ssl").getOrElse(false)
   logger.debug("PusherClient configuration:")
   logger.debug(s"appId........ ${appId}")
   logger.debug(s"key.......... ${key}")
