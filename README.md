@@ -197,6 +197,7 @@ val pusher = new PusherClient(ConfigFactory.parseString("""pusher: {appId: "app0
 | `secret`       | `String` | Your pusher app secret. |
 | `batchTrigger` | `Boolean` (default: false) | Flag to enable batch trigger requests. The batch size is 100 as pusher limits it. |
 | `batchInterval` | `Int` (default: 1000) | Milliseconds to make batch trigger requests. |
+| `ssl` | `Boolean` (default: false) | Encrypt API request with SSL |
 
 ## Test
 
