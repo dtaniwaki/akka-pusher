@@ -14,7 +14,6 @@ val specs2V = "3.6.4"
 val developmentDependencies = Seq(
   "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
   "com.typesafe.akka"   %%  "akka-http-core-experimental" % akkaHttpV,
-  "io.spray"            %%  "spray-http"    % "1.3.2",
   "io.spray"            %%  "spray-json"    % "1.3.2",
   "com.github.nscala-time" %% "nscala-time" % "2.2.0",
   "org.slf4j"           %   "slf4j-api"     % "1.7.12"
