@@ -39,6 +39,8 @@ libraryDependencies <++= (scalaVersion) {
     developmentDependencies ++ developmentDependencies_2_11 ++ testDependencies
 }
 
+fork in Test := true
+parallelExecution in Test := true
 javaOptions in Test ++= Seq(
   s"-Djava.util.Arrays.useLegacyMergeSort=true"
 )
