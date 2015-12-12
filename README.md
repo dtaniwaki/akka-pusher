@@ -190,14 +190,21 @@ Or, you can directly set the config by the costructor argument.
 val pusher = new PusherClient(ConfigFactory.parseString("""pusher: {appId: "app0", key: "key0", secret: "secret0"}"""))
 ```
 
+### PusherClient Configuration
+
 | key            | type     | description |
 |---------------:|:---------|:------------|
 | `appId`        | `String` | Your pusher app ID. |
 | `key`          | `String` | Your pusher app key. |
 | `secret`       | `String` | Your pusher app secret. |
+| `ssl` | `Boolean` (default: false) | Encrypt API request with SSL |
+
+### PusherActor Configuration
+
+| key            | type     | description |
+|---------------:|:---------|:------------|
 | `batchTrigger` | `Boolean` (default: false) | Flag to enable batch trigger requests. The batch size is 100 as pusher limits it. |
 | `batchInterval` | `Int` (default: 1000) | Milliseconds to make batch trigger requests. |
-| `ssl` | `Boolean` (default: false) | Encrypt API request with SSL |
 
 ## Test
 
