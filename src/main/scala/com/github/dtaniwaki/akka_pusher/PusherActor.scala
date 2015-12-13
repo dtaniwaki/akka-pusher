@@ -84,11 +84,11 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
   }
 
   override def postStop(): Unit = {
-    super.postStop()
     if (batchTrigger) {
       scheduler.map(_.cancel())
     }
     pusher.shutdown()
+    super.postStop()
   }
 }
 
