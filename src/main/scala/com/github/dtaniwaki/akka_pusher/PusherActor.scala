@@ -61,10 +61,12 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
         true
       case BatchTriggerTick() if batchTrigger =>
         val triggers = batchTriggerQueue.dequeueAll { _ => true }
-        triggers.grouped(batchNumber) foreach { triggers =>
-          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
-            case Success(_) => // Do Nothing
-            case Failure(e) => logger.warn(e.getMessage)
+        Future.successful(triggers).map { triggers =>
+          triggers.grouped(batchNumber) foreach { triggers =>
+            pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
+              case Success(_) => // Do Nothing
+              case Failure(e) => logger.warn(e.getMessage)
+            }
           }
         }
         triggers.length
