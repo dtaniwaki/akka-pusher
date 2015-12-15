@@ -1,104 +1,15 @@
 package com.github.dtaniwaki.akka_pusher
 
-import com.github.dtaniwaki.akka_pusher.PusherEvents._
-import com.github.dtaniwaki.akka_pusher.PusherRequests._
-import com.github.nscala_time.time.Imports._
+import com.github.dtaniwaki.akka_pusher.PusherModels.{ User, Channel }
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
-import org.joda.time.format._
-import com.github.nscala_time.time.Imports._
-
-import PusherRequests._
-import PusherEvents._
-import PusherModels._
 import spray.json._
 
 class PusherJsonSupportSpec extends Specification
     with SpecHelper
     with RandomSequentialExecution
     with PusherJsonSupport {
-  "WebhookRequestJsonSupport" should {
-    "with multiple different events" in {
-      "read from json object" in {
-        val data: Map[String, String] = Map("foo" -> "bar")
-        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
-        val event2 = ChannelOccupiedEvent("channel_occupied", "test")
-        val dataString = data.toJson.toString.replace("\"", "\\\"")
-        s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"},{"name":"channel_occupied","channel":"test"}]}"""
-          .parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event1, event2))
-      }
-      "write to json object" in {
-        val data: Map[String, String] = Map("foo" -> "bar")
-        val event1 = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
-        val event2 = ChannelOccupiedEvent("channel_occupied", "test")
-        val dataString = data.toJson.toString.replace("\"", "\\\"")
-        WebhookRequest(new DateTime(12345000), List(event1, event2)).toJson === s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"},{"name":"channel_occupied","channel":"test"}]}""".parseJson
-      }
-    }
-    "with invalid event" in {
-      "does not read from json object" in {
-        """{"time_ms": 12345, "events":[{"name":"invalid_event", "channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List())
-      }
-      "does not read from json object without name" in {
-        """{"time_ms": 12345, "events":[{"channel": "test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List())
-      }
-    }
-    "with client event" in {
-      "read from json object" in {
-        val data: Map[String, String] = Map("foo" -> "bar")
-        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
-        val dataString = data.toJson.toString.replace("\"", "\\\"")
-        s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
-      }
-      "write to json object" in {
-        val data: Map[String, String] = Map("foo" -> "bar")
-        val event = ClientEvent(name = "client_event", channel = "test", userId = "123", data = data, event = "event", socketId = "123.234")
-        val dataString = data.toJson.toString.replace("\"", "\\\"")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === s"""{"time_ms": 12345, "events":[{"name": "client_event", "channel": "test", "user_id": "123", "data": "$dataString", "event": "event", "socket_id": "123.234"}]}""".parseJson
-      }
-    }
-    "with channel_occupied event" in {
-      "read from json object" in {
-        val event = ChannelOccupiedEvent("channel_occupied", "test")
-        """{"time_ms": 12345, "events":[{"name":"channel_occupied", "channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
-      }
-      "write to json object" in {
-        val event = ChannelOccupiedEvent("channel_occupied", "test")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"channel_occupied", "channel":"test"}]}""".parseJson
-      }
-    }
-    "with channel_vacated event" in {
-      "read from json object" in {
-        val event = ChannelVacatedEvent("channel_vacated", "test")
-        """{"time_ms": 12345, "events":[{"name":"channel_vacated", "channel":"test"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
-      }
-      "write to json object" in {
-        val event = ChannelVacatedEvent("channel_vacated", "test")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"channel_vacated", "channel":"test"}]}""".parseJson
-      }
-    }
-    "with member_added event" in {
-      "read from json object" in {
-        val event = MemberAddedEvent("member_added", "test", "foo")
-        """{"time_ms": 12345, "events":[{"name":"member_added", "channel":"test", "user_id":"foo"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
-      }
-      "write to json object" in {
-        val event = MemberAddedEvent("member_added", "test", "foo")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"member_added", "channel":"test", "user_id":"foo"}]}""".parseJson
-      }
-    }
-    "with member_removed event" in {
-      "read from json object" in {
-        val event = MemberRemovedEvent("member_removed", "test", "foo")
-        """{"time_ms": 12345, "events":[{"name":"member_removed", "channel":"test", "user_id":"foo"}]}""".parseJson.convertTo[WebhookRequest] === WebhookRequest(new DateTime(12345000), List(event))
-      }
-      "write to json object" in {
-        val event = MemberRemovedEvent("member_removed", "test", "foo")
-        WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"member_removed", "channel":"test", "user_id":"foo"}]}""".parseJson
-      }
-    }
-    // TODO: Add specs for all the events individually
-  }
+
   "ChannelMapJsonFormat" should {
     "with channels" in {
       "read from json object" in {
@@ -127,18 +38,6 @@ class PusherJsonSupportSpec extends Specification
       }
     }
   }
-  "ChannelJsonFormat" should {
-    "with all fields" in {
-      "read from json object" in {
-        val channel = Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2))
-        """{"occupied": true, "user_count": 1, "subscription_count": 2}""".parseJson.convertTo[Channel] === channel
-      }
-      "write to json object" in {
-        val channel = Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2))
-        channel.toJson === """{"occupied": true, "user_count": 1, "subscription_count": 2}""".parseJson
-      }
-    }
-  }
   "UserListJsonFormat" should {
     "with users" in {
       "read from json object" in {
@@ -158,36 +57,6 @@ class PusherJsonSupportSpec extends Specification
       "write to json object" in {
         val users = List[User]()
         users.toJson === """{"users": []}""".parseJson
-      }
-    }
-  }
-  "UserJsonFormat" should {
-    "with all fields" in {
-      "read from json object" in {
-        val user = User("123")
-        """{"id": "123"}""".parseJson.convertTo[User] === user
-      }
-      "write to json object" in {
-        val user = User("123")
-        user.toJson === """{"id": "123"}""".parseJson
-      }
-    }
-  }
-  "channelDataJsonReaderSupport" should {
-    "read from json object" in {
-      val channelData = ChannelData("user", Some(Map("foo" -> "bar")))
-      """{"user_id": "user", "user_info": {"foo": "bar"}}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
-    }
-    "with null user info" in {
-      "read from json object" in {
-        val channelData = ChannelData("user")
-        """{"user_id": "user", "user_info": null}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
-      }
-    }
-    "without user info" in {
-      "read from json object" in {
-        val channelData = ChannelData("user")
-        """{"user_id": "user"}""".parseJson.convertTo[ChannelData[Map[String, String]]] === channelData
       }
     }
   }

@@ -131,7 +131,7 @@ class PusherActorSpec extends Specification
         }
       }
     }
-    "with TriggerMessage" in {
+    "with TriggerMessage if batchTrigger" in {
       "enqueue the message" in {
         val pusher = mock[PusherClient].smart
         val queue = mock[Queue[TriggerMessage]].smart
@@ -146,6 +146,28 @@ class PusherActorSpec extends Specification
           Thread.sleep(500)
           there was no(pusher).trigger(anyString, anyString, any, any)(any)
           there was one(queue).enqueue(message)
+        } finally {
+          system.stop(actorRef)
+        }
+      }
+    }
+    "with Seq[TriggerMessage] if batchTrigger" in {
+      "enqueue the message" in {
+        val pusher = mock[PusherClient].smart
+        val queue = mock[Queue[TriggerMessage]].smart
+        pusher.trigger(anyString, anyString, any, any)(any) returns Future(Success(Result("")))
+        queue.enqueue(any)
+        val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+        try {
+          val message1 = TriggerMessage("channel1", "event1", JsString("message1"), Some("123.234"))
+          val message2 = TriggerMessage("channel2", "event2", JsString("message2"), Some("123.234"))
+          actorRef ! Seq(message1, message2)
+          Thread.sleep(0) // yield to other threads
+          Thread.sleep(500)
+          there was no(pusher).trigger(anyString, anyString, any, any)(any)
+          there was one(queue).enqueue(message1)
+          there was one(queue).enqueue(message2)
         } finally {
           system.stop(actorRef)
         }

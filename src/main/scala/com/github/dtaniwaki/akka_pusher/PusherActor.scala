@@ -44,8 +44,15 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
       case trigger: TriggerMessage if batchTrigger =>
         batchTriggerQueue.enqueue(trigger)
         true
+      case triggers: Seq[_] if batchTrigger && triggers.forall(_.isInstanceOf[TriggerMessage]) =>
+        batchTriggerQueue.enqueue(triggers.map(_.asInstanceOf[TriggerMessage]): _*)
+        true
       case TriggerMessage(channel, event, message, socketId) =>
         pusher.trigger(channel, event, message, socketId)
+      case triggers: Seq[_] if triggers.forall(_.isInstanceOf[TriggerMessage]) =>
+        Future.sequence(triggers.map(_.asInstanceOf[TriggerMessage]).grouped(batchNumber).map { triggers =>
+          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get))
+        })
       case ChannelMessage(channel, attributes) =>
         pusher.channel(channel, attributes)
       case ChannelsMessage(prefixFilter, attributes) =>
