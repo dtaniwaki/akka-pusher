@@ -63,19 +63,19 @@ val result: Future[Try[Result]] = pusher.trigger(Seq(("test_channel", "my_event"
 #### channels
 
 ```scala
-val channels: Future[Try[Map[String, Channel]]] = pusher.channels("my_")
+val channels: Future[Try[ChannelMap]] = pusher.channels("presence-my_", Seq(PusherChannelsAttributes.userCount))
 ```
 
 #### channel
 
 ```scala
-val channel: Future[Try[Channel]] = pusher.channel("my_channel")
+val channel: Future[Try[Channel]] = pusher.channel("presence-my_channel", Seq(PusherChannelAttributes.userCount))
 ```
 
 #### users
 
 ```scala
-val users: Future[Try[List[User]]] = pusher.users("my_channel")
+val users: Future[Try[UserList]] = pusher.users("presence-my_channel")
 ```
 
 #### authenticate
@@ -115,7 +115,7 @@ The trigger will be executed in batch in 1000 milliseconds (default).
 #### ChannelMessage
 
 ```scala
-(pusherActor ask ChannelMessage("channel-name", Some(Seq("user_count")))).map {
+(pusherActor ask ChannelMessage("presence-my_channel", Seq(PusherChannelAttributes.userCount))).map {
   case Success(res: PusherModels.Channel) => println(res)
   case Failure(e) => throw e
 }
@@ -124,9 +124,9 @@ The trigger will be executed in batch in 1000 milliseconds (default).
 #### ChannelsMessage
 
 ```scala
-(pusherActor ask ChannelsMessage("channel-name-prefix", Some(Seq("user_count")))).map {
-  case Success(res: Map[_, _]) if res.forall{ case (k, v) => k.isInstanceOf[String] && v.isInstanceOf[PusherModels.Channel] } =>
-    println(res.asInstanceOf[Map[String, PusherModels.Channel]])
+(pusherActor ask ChannelsMessage("presence-my_", Seq(PusherChannelsAttributes.userCount))).map {
+  case Success(res: ChannelMap) =>
+    println(res)
   case Failure(e) => throw e
 }
 ```
@@ -134,9 +134,9 @@ The trigger will be executed in batch in 1000 milliseconds (default).
 #### UserMessage
 
 ```scala
-(pusherActor ask UsersMessage("channel-name")).map {
-  case Success(res: List[_]) if res.forall(_.isInstanceOf[PusherModels.User]) =>
-    println(res.asInstanceOf[List[PusherModels.User]])
+(pusherActor ask UsersMessage("presence-my_channel")).map {
+  case Success(res: UserList) =>
+    println(res)
   case Failure(e) => throw e
 }
 ```
