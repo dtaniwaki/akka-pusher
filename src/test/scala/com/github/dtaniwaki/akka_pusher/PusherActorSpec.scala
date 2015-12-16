@@ -3,6 +3,7 @@ package com.github.dtaniwaki.akka_pusher
 import akka.actor.{ ActorSystem, Props }
 import akka.pattern.ask
 import akka.util.Timeout
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
 import com.typesafe.config.ConfigFactory
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
@@ -57,7 +58,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
-          val future = actorRef ? ChannelMessage("channel", Some(Seq("attr1", "attr2")))
+          val future = actorRef ? ChannelMessage("channel", Some(Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount)))
           awaitResult(future) === Success(Channel())
         } finally {
           system.stop(actorRef)
@@ -71,7 +72,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
-          val future = actorRef ? ChannelsMessage("prefix", Some(Seq("attr1", "attr2")))
+          val future = actorRef ? ChannelsMessage("prefix", Some(Seq(PusherChannelsAttributes.userCount)))
           awaitResult(future) === Success(Map[String, Channel]())
         } finally {
           system.stop(actorRef)

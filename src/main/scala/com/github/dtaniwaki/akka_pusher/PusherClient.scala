@@ -11,6 +11,7 @@ import akka.stream.scaladsl.{ Sink, Source }
 import com.github.dtaniwaki.akka_pusher.PusherExceptions._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, PusherChannelAttributes }
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import akka.http.scaladsl.model.Uri
@@ -88,7 +89,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     })
   }
 
-  def channel(channel: String, attributes: Option[Seq[String]] = None): Future[Try[Channel]] = {
+  def channel(channel: String, attributes: Option[Seq[PusherChannelAttributes.Value]] = None): Future[Try[Channel]] = {
     validateChannel(channel)
     var uri = generateUri(s"/apps/$appId/channels/$channel")
 
@@ -101,7 +102,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
 
-  def channels(prefixFilter: String, attributes: Option[Seq[String]] = None): Future[Try[Map[String, Channel]]] = {
+  def channels(prefixFilter: String, attributes: Option[Seq[PusherChannelsAttributes.Value]] = None): Future[Try[Map[String, Channel]]] = {
     var uri = generateUri(s"/apps/$appId/channels")
 
     val params = Map(

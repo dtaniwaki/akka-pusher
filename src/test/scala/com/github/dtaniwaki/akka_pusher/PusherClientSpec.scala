@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.model.MediaTypes._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
+import com.github.dtaniwaki.akka_pusher.attributes.{PusherChannelAttributes, PusherChannelsAttributes}
 import com.typesafe.config.ConfigFactory
 import org.mockito.{ArgumentCaptor}
 import org.specs2.mock.Mockito
@@ -177,11 +178,11 @@ class PusherClientSpec extends Specification
       mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
 
       val pusher = pusherStub(mockedSource)
-      val res = pusher.channel("channel", Some(Seq("attr1", "attr2")))
+      val res = pusher.channel("channel", Some(Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount)))
       awaitResult(res) === Success(Channel())
 
       argument.getValue() must equalToHttpGetRequest(
-        """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&info=attr1,attr2&auth_signature=[0-9a-f]+"""
+        """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&info=subscription_count,user_count&auth_signature=[0-9a-f]+"""
       )
     }
     "without attributes" in {
@@ -207,11 +208,11 @@ class PusherClientSpec extends Specification
       mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
 
       val pusher = pusherStub(mockedSource)
-      val res = pusher.channels("prefix", Some(Seq("attr1", "attr2")))
+      val res = pusher.channels("prefix", Some(Seq(PusherChannelsAttributes.userCount)))
       awaitResult(res) === Success(Map[String, Channel]())
 
       argument.getValue() must equalToHttpGetRequest(
-        """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&info=attr1,attr2&auth_signature=[0-9a-f]+"""
+        """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&info=user_count&auth_signature=[0-9a-f]+"""
       )
     }
     "without attributes" in {

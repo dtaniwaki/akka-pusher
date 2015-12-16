@@ -1,6 +1,7 @@
 package com.github.dtaniwaki.akka_pusher
 
 import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, PusherChannelAttributes }
 import spray.json.JsValue
 
 object PusherMessages {
@@ -17,10 +18,10 @@ object PusherMessages {
     socketId: Option[String] = None)
   case class ChannelMessage(
     channel: String,
-    attributes: Option[Seq[String]] = None)
+    attributes: Option[Seq[PusherChannelAttributes.Value]] = None)
   case class ChannelsMessage(
     prefixFilter: String,
-    attributes: Option[Seq[String]] = None)
+    attributes: Option[Seq[PusherChannelsAttributes.Value]] = None)
   case class UsersMessage(
     channel: String)
   case class AuthenticateMessage(
