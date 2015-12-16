@@ -46,6 +46,26 @@ class PusherActorSpec extends Specification
         try {
           val future = actorRef ? TriggerMessage("channel1", "event", JsString("message"), Some("123.234"))
           awaitResult(future) === Success(Result(""))
+          there was one(pusher).trigger(anyString, anyString, any, any)(any)
+        } finally {
+          system.stop(actorRef)
+        }
+      }
+    }
+    "with Seq[TriggerMessage]" in {
+      "enqueue the message" in {
+        val pusher = mock[PusherClient].smart
+        pusher.trigger(any)(any) returns Future(Success(Result("")))
+        val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
+
+        try {
+          val messages = Seq(
+            TriggerMessage("channel1", "event1", JsString("message1"), Some("123.234")),
+            TriggerMessage("channel2", "event2", JsString("message2"), Some("123.234"))
+          )
+          val future = actorRef ? messages
+          awaitResult(future) === Seq(Success(Result("")))
+          there was one(pusher).trigger(===(messages.map(TriggerMessage.unapply(_).get)))(any)
         } finally {
           system.stop(actorRef)
         }
