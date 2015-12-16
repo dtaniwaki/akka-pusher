@@ -10,6 +10,18 @@ class PusherModelsSpec extends Specification
     with RandomSequentialExecution
     with PusherJsonSupport {
 
+  "Result" in {
+    "resultJsonFormat" should {
+      "read from json object" in {
+        val result = Result(data = "foo")
+        """{"data": "foo"}""".parseJson.convertTo[Result] === result
+      }
+      "write to json object" in {
+        val result = Result(data = "foo")
+        result.toJson === """{"data": "foo"}""".parseJson
+      }
+    }
+  }
   "Channel" in {
     "ChannelJsonFormat" should {
       "with all fields" in {
@@ -85,6 +97,30 @@ class PusherModelsSpec extends Specification
       "write to json object" in {
         val channels = ChannelMap()
         channels.toJson === """{}""".parseJson
+      }
+    }
+  }
+  "AuthenticatedParams" in {
+    "authenticatedParamsJsonSupport" should {
+      "with channelData" in {
+        "read from json object" in {
+          val auth = AuthenticatedParams(auth = "foo", channelData = Some("bar"))
+          """{"auth": "foo", "channel_data": "bar"}""".parseJson.convertTo[AuthenticatedParams] === auth
+        }
+        "write to json object" in {
+          val auth = AuthenticatedParams(auth = "foo", channelData = Some("bar"))
+          auth.toJson === """{"auth": "foo", "channel_data": "bar"}""".parseJson
+        }
+      }
+      "without channelData" in {
+        "read from json object" in {
+          val auth = AuthenticatedParams(auth = "foo")
+          """{"auth": "foo"}""".parseJson.convertTo[AuthenticatedParams] === auth
+        }
+        "write to json object" in {
+          val auth = AuthenticatedParams(auth = "foo")
+          auth.toJson === """{"auth": "foo"}""".parseJson
+        }
       }
     }
   }
