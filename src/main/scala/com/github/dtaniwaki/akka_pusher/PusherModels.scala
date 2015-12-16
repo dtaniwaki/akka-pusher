@@ -11,9 +11,36 @@ object PusherModels extends PusherJsonSupport {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
-  type ChannelMap = Map[String, Channel]
+  class ChannelMap(seq: (String, Channel)*) {
+    private val delegatee = Map[String, Channel](seq: _*)
+    def apply(k: String): Channel = delegatee.apply(k)
+    def get(k: String): Option[Channel] = delegatee.get(k)
+    def map[B](f: ((String, Channel)) => B): Iterable[B] = delegatee.map(f)
+    def foreach(f: ((String, Channel)) => Unit): Unit = delegatee.foreach(f)
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: ChannelMap => this.delegatee.equals(that.delegatee)
+        case _                => false
+      }
+    }
+  }
   object ChannelMap {
-    def apply(seq: (String, Channel)*): ChannelMap = Map[String, Channel](seq: _*)
+    def apply(seq: (String, Channel)*): ChannelMap = new ChannelMap(seq: _*)
+
+    implicit object ChannelMapJsonSupport extends JsonFormat[ChannelMap] {
+      def write(channels: ChannelMap): JsValue = {
+        JsObject(channels.map {
+          case (name, channel) =>
+            (name, channel.toJson)
+        }.toSeq: _*)
+      }
+      def read(json: JsValue): ChannelMap = {
+        ChannelMap(json.asJsObject.fields.map {
+          case (channelName, channelData) =>
+            (channelName, channelData.convertTo[Channel])
+        }.toSeq: _*)
+      }
+    }
   }
 
   case class User(
@@ -22,9 +49,34 @@ object PusherModels extends PusherJsonSupport {
     implicit val userJsonSupport = jsonFormat(User.apply _, "id")
   }
 
-  type UserList = List[User]
+  class UserList(seq: User*) {
+    private val list = seq.toList
+    def apply(n: Int): User = list.apply(n)
+    def map[B](f: (User) => B): Iterable[B] = list.map(f)
+    def foreach(f: (User) => Unit): Unit = list.foreach(f)
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: UserList => this.list.equals(that.list)
+        case _              => false
+      }
+    }
+  }
   object UserList {
-    def apply(seq: User*): UserList = List[User](seq: _*)
+    def apply(seq: User*): UserList = new UserList(seq: _*)
+
+    implicit object UserListJsonSupport extends JsonFormat[UserList] {
+      def write(users: UserList): JsValue = {
+        JsObject("users" -> JsArray(users.map(_.toJson).toVector))
+      }
+      def read(json: JsValue): UserList = {
+        json.asJsObject.getFields("users") match {
+          case Seq(JsArray(users)) =>
+            UserList(users.map { user =>
+              user.convertTo[User]
+            }.toSeq: _*)
+        }
+      }
+    }
   }
 
   case class Result(
@@ -51,35 +103,6 @@ object PusherModels extends PusherJsonSupport {
     userInfo: Option[T] = None)(implicit writer: JsonFormat[T])
   object ChannelData {
     def apply(userId: String) = new ChannelData[JsValue](userId)
-  }
-
-  implicit object ChannelMapJsonSupport extends JsonFormat[ChannelMap] {
-    def write(channels: ChannelMap): JsValue = {
-      JsObject(channels.map {
-        case (name, channel) =>
-          (name, channel.toJson)
-      })
-    }
-    def read(json: JsValue): ChannelMap = {
-      json.asJsObject.fields.map {
-        case (channelName, channelData) =>
-          (channelName, channelData.convertTo[Channel])
-      }
-    }
-  }
-
-  implicit object UserListJsonSupport extends JsonFormat[UserList] {
-    def write(users: UserList): JsValue = {
-      JsObject("users" -> JsArray(users.map(_.toJson).toVector))
-    }
-    def read(json: JsValue): UserList = {
-      json.asJsObject.getFields("users") match {
-        case Seq(JsArray(users)) =>
-          users.map { user =>
-            user.convertTo[User]
-          }.toList
-      }
-    }
   }
 
   implicit def channelDataJsonFormatSupport[T](implicit writer: JsonFormat[T]): JsonFormat[ChannelData[T]] = new JsonFormat[ChannelData[T]] {

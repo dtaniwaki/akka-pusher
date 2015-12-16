@@ -102,12 +102,12 @@ class PusherActorSpec extends Specification
     "with UsersMessage" in {
       "returns Users" in {
         val pusher = mock[PusherClient].smart
-        pusher.users(anyString) returns Future(Success(List[User]()))
+        pusher.users(anyString) returns Future(Success(UserList()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
           val future = actorRef ? UsersMessage("channel")
-          awaitResult(future) === Success(List[User]())
+          awaitResult(future) === Success(UserList())
         } finally {
           system.stop(actorRef)
         }

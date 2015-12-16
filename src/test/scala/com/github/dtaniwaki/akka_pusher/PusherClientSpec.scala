@@ -209,7 +209,7 @@ class PusherClientSpec extends Specification
 
       val pusher = pusherStub(mockedSource)
       val res = pusher.channels("prefix", Seq(PusherChannelsAttributes.userCount))
-      awaitResult(res) === Success(Map[String, Channel]())
+      awaitResult(res) === Success(ChannelMap())
 
       argument.getValue() must equalToHttpGetRequest(
         """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&info=user_count&auth_signature=[0-9a-f]+"""
@@ -223,7 +223,7 @@ class PusherClientSpec extends Specification
 
         val pusher = pusherStub(mockedSource)
         val res = pusher.channels("prefix")
-        awaitResult(res) === Success(Map[String, Channel]())
+        awaitResult(res) === Success(ChannelMap())
 
         argument.getValue() must equalToHttpGetRequest(
           """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&auth_signature=[0-9a-f]+"""
