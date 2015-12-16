@@ -1,9 +1,8 @@
 package com.github.dtaniwaki.akka_pusher
 
 import spray.json._
-import spray.json.DefaultJsonProtocol._
 
-object PusherEvents {
+object PusherEvents extends PusherJsonSupport {
   sealed abstract class PusherEvent
 
   case class ChannelOccupiedEvent(

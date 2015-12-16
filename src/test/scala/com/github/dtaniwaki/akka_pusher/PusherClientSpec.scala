@@ -13,7 +13,6 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import org.specs2.matcher.{Expectable, Matcher}
-import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,6 +24,7 @@ class PusherClientSpec extends Specification
   with RandomSequentialExecution
   with SpecHelper
   with Mockito
+  with PusherJsonSupport
 {
   implicit val system: ActorSystem = ActorSystem("pusher-client")
   implicit val materializer = ActorMaterializer()
@@ -239,7 +239,7 @@ class PusherClientSpec extends Specification
 
       val pusher = pusherStub(mockedSource)
       val res = pusher.users("channel")
-      awaitResult(res) === Success(List[User]())
+      awaitResult(res) === Success(UserList())
 
       argument.getValue() must equalToHttpGetRequest(
         """http://api.pusherapp.com/apps/app/channels/channel/users\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&auth_signature=[0-9a-f]+"""

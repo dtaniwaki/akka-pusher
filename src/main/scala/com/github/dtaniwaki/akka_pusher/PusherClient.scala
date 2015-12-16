@@ -15,16 +15,16 @@ import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, P
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import akka.http.scaladsl.model.Uri
-import spray.json._
 import org.slf4j.LoggerFactory
+import spray.json._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{ Try, Success, Failure }
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
-    extends PusherJsonSupport
-    with PusherValidator {
+    extends PusherValidator
+    with PusherJsonSupport {
   private lazy val logger = LoggerFactory.getLogger(getClass)
   private val defaultHeaders: List[HttpHeader] = List(headers.`User-Agent`(s"akka-pusher v${getClass.getPackage.getImplementationVersion}"))
 
@@ -52,12 +52,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     validateSocketId(socketId)
     var uri = generateUri(s"/apps/$appId/events")
 
-    val body = Map[String, JsValue](
+    val body = JsObject(Seq(
       "data" -> JsString(data.toJson.compactPrint),
       "name" -> JsString(event),
       "channels" -> JsArray(channels.map(JsString.apply).toVector),
       "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
-    ).filter(_._2 != JsNull).toJson.compactPrint
+    ).filter(_._2 != JsNull): _*).compactPrint
 
     uri = signUri("POST", uri, Some(body))
 
@@ -74,12 +74,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     val body = JsObject("batch" -> JsArray(triggers.map {
       case (channel, event, data, socketId) =>
-        Map[String, JsValue](
+        JsObject(Seq(
           "data" -> JsString(data.toJson.compactPrint),
           "name" -> JsString(event),
           "channel" -> JsString(channel),
           "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
-        ).filter(_._2 != JsNull).toJson
+        ).filter(_._2 != JsNull): _*)
     }.toVector)).compactPrint
 
     uri = signUri("POST", uri, Some(body))
@@ -123,12 +123,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     channels(prefixFilter, attributes.getOrElse(Seq()).map(PusherChannelsAttributes.withName(_)))
   }
 
-  def users(channel: String): Future[Try[List[User]]] = {
+  def users(channel: String): Future[Try[UserList]] = {
     validateChannel(channel)
     var uri = generateUri(s"/apps/$appId/channels/$channel/users")
     uri = signUri("GET", uri)
 
-    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[List[User]]))
+    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[UserList]))
   }
 
   def authenticate[T: JsonFormat](channel: String, socketId: String, data: Option[ChannelData[T]] = Option.empty[ChannelData[String]]): AuthenticatedParams = {

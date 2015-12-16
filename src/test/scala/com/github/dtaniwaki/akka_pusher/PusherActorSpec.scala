@@ -10,7 +10,6 @@ import com.github.dtaniwaki.akka_pusher.PusherModels._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
-import spray.json.DefaultJsonProtocol._
 import spray.json._
 import scala.collection.mutable.Queue
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,7 +29,8 @@ class TestBatchActor(_pusher: PusherClient, _queue: Queue[TriggerMessage]) exten
 class PusherActorSpec extends Specification
     with SpecHelper
     with RandomSequentialExecution
-    with Mockito {
+    with Mockito
+    with PusherJsonSupport {
   implicit val system = ActorSystem("pusher")
   implicit val timeout = Timeout(5 seconds)
 

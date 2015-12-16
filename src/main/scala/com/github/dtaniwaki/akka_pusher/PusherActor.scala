@@ -4,7 +4,6 @@ import akka.actor._
 import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.config.{ Config, ConfigFactory }
-import spray.json.DefaultJsonProtocol._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -14,7 +13,7 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.util.{ Success, Failure }
 
-class PusherActor(config: Config = ConfigFactory.load()) extends Actor {
+class PusherActor(config: Config = ConfigFactory.load()) extends Actor with PusherJsonSupport {
   implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
   private lazy val logger = LoggerFactory.getLogger(getClass)

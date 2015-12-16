@@ -1,14 +1,14 @@
 package com.github.dtaniwaki.akka_pusher
 
-import com.github.dtaniwaki.akka_pusher.PusherModels.{ ChannelMap, ChannelData, User, Channel }
+import com.github.dtaniwaki.akka_pusher.PusherModels._
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 class PusherModelsSpec extends Specification
     with SpecHelper
-    with RandomSequentialExecution {
+    with RandomSequentialExecution
+    with PusherJsonSupport {
 
   "Channel" in {
     "ChannelJsonFormat" should {
@@ -38,33 +38,53 @@ class PusherModelsSpec extends Specification
       }
     }
   }
-  "ChannelMap" in {
-    "ChannelMapJsonFormat" should {
-      "with channels" in {
-        "read from json object" in {
-          val channels = ChannelMap(
-            "channel1" -> Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2)),
-            "channel2" -> Channel(occupied = Some(true), userCount = Some(2), subscriptionCount = Some(3))
-          )
-          """{"channel1": {"occupied": true, "user_count": 1, "subscription_count": 2}, "channel2": {"occupied": true, "user_count": 2, "subscription_count": 3}}""".parseJson.convertTo[ChannelMap] === channels
-        }
-        "write to json object" in {
-          val channels = ChannelMap(
-            "channel1" -> Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2)),
-            "channel2" -> Channel(occupied = Some(true), userCount = Some(2), subscriptionCount = Some(3))
-          )
-          channels.toJson === """{"channel1": {"occupied": true, "user_count": 1, "subscription_count": 2}, "channel2": {"occupied": true, "user_count": 2, "subscription_count": 3}}""".parseJson
-        }
+  "UserListJsonFormat" should {
+    "with users" in {
+      "read from json object" in {
+        val users = UserList(User("123"), User("234"))
+        """{"users": [{"id": "123"}, {"id": "234"}]}""".parseJson.convertTo[UserList] === users
       }
-      "without channels" in {
-        "read from json object" in {
-          val channels = ChannelMap()
-          """{}""".parseJson.convertTo[ChannelMap] === channels
-        }
-        "write to json object" in {
-          val channels = ChannelMap()
-          channels.toJson === """{}""".parseJson
-        }
+      "write to json object" in {
+        val users = UserList(User("123"), User("234"))
+        users.toJson === """{"users": [{"id": "123"}, {"id": "234"}]}""".parseJson
+      }
+    }
+    "without users" in {
+      "read from json object" in {
+        val users = UserList()
+        """{"users": []}""".parseJson.convertTo[UserList] === users
+      }
+      "write to json object" in {
+        val users = UserList()
+        users.toJson === """{"users": []}""".parseJson
+      }
+    }
+  }
+  "ChannelMapJsonFormat" should {
+    "with channels" in {
+      "read from json object" in {
+        val channels = ChannelMap(
+          "channel1" -> Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2)),
+          "channel2" -> Channel(occupied = Some(true), userCount = Some(2), subscriptionCount = Some(3))
+        )
+        """{"channel1": {"occupied": true, "user_count": 1, "subscription_count": 2}, "channel2": {"occupied": true, "user_count": 2, "subscription_count": 3}}""".parseJson.convertTo[ChannelMap] === channels
+      }
+      "write to json object" in {
+        val channels = ChannelMap(
+          "channel1" -> Channel(occupied = Some(true), userCount = Some(1), subscriptionCount = Some(2)),
+          "channel2" -> Channel(occupied = Some(true), userCount = Some(2), subscriptionCount = Some(3))
+        )
+        channels.toJson === """{"channel1": {"occupied": true, "user_count": 1, "subscription_count": 2}, "channel2": {"occupied": true, "user_count": 2, "subscription_count": 3}}""".parseJson
+      }
+    }
+    "without channels" in {
+      "read from json object" in {
+        val channels = ChannelMap()
+        """{}""".parseJson.convertTo[ChannelMap] === channels
+      }
+      "write to json object" in {
+        val channels = ChannelMap()
+        channels.toJson === """{}""".parseJson
       }
     }
   }

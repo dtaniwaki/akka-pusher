@@ -1,11 +1,10 @@
 package com.github.dtaniwaki.akka_pusher
 
 import com.github.nscala_time.time.Imports._
-import spray.json._
-import spray.json.DefaultJsonProtocol._
 import PusherEvents._
+import spray.json._
 
-object PusherRequests {
+object PusherRequests extends PusherJsonSupport {
   case class AuthRequest(
     socketId: String,
     channelName: String)

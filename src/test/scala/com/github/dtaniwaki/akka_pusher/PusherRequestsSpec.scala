@@ -6,11 +6,11 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import com.github.nscala_time.time.Imports._
 import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 class PusherRequestsSpec extends Specification
     with SpecHelper
-    with RandomSequentialExecution {
+    with RandomSequentialExecution
+    with PusherJsonSupport {
 
   "WebhookRequestJsonSupport" should {
     "with multiple different events" in {
