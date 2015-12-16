@@ -92,6 +92,17 @@ class PusherRequestsSpec extends Specification
         WebhookRequest(new DateTime(12345000), List(event)).toJson === """{"time_ms": 12345, "events":[{"name":"member_removed", "channel":"test", "user_id":"foo"}]}""".parseJson
       }
     }
-    // TODO: Add specs for all the events individually
+  }
+  "AuthRequest" in {
+    "AuthRequestJsonSupport" should {
+      "read from json object" in {
+        val request = AuthRequest(socketId = "123.234", channelName = "test")
+        """{"socket_id": "123.234", "channel_name": "test"}""".parseJson.convertTo[AuthRequest] === request
+      }
+      "write to json object" in {
+        val request = AuthRequest(socketId = "123.234", channelName = "test")
+        request.toJson === """{"socket_id": "123.234", "channel_name": "test"}""".parseJson
+      }
+    }
   }
 }
