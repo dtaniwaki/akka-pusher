@@ -157,7 +157,7 @@ class PusherActorSpec extends Specification
         val pusher = mock[PusherClient].smart
         val queue = mock[Queue[TriggerMessage]].smart
         pusher.trigger(anyString, anyString, any, any)(any) returns Future(Success(Result("")))
-        queue.enqueue(any)
+        queue.enqueue(anyVarArg[TriggerMessage])
         val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
 
         try {
@@ -167,8 +167,7 @@ class PusherActorSpec extends Specification
           Thread.sleep(0) // yield to other threads
           Thread.sleep(500)
           there was no(pusher).trigger(anyString, anyString, any, any)(any)
-          there was one(queue).enqueue(message1)
-          there was one(queue).enqueue(message2)
+          there was one(queue).enqueue(message1, message2)
         } finally {
           system.stop(actorRef)
         }
