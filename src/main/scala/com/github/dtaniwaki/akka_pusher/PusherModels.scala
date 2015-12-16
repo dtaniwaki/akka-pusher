@@ -12,6 +12,27 @@ object PusherModels {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
+  type ChannelMap = Map[String, Channel]
+  object ChannelMap {
+    def apply(): ChannelMap = Map[String, Channel]()
+    def apply(seq: (String, Channel)*): ChannelMap = Map[String, Channel](seq: _*)
+
+    implicit object ChannelMapJsonSupport extends JsonFormat[ChannelMap] {
+      def write(channels: ChannelMap): JsValue = {
+        JsObject(channels.map {
+          case (name, channel) =>
+            (name, channel.toJson)
+        })
+      }
+      def read(json: JsValue): ChannelMap = {
+        json.asJsObject.fields.map {
+          case (channelName, channelData) =>
+            (channelName, channelData.convertTo[Channel])
+        }
+      }
+    }
+  }
+
   case class User(
     id: String)
   object User {

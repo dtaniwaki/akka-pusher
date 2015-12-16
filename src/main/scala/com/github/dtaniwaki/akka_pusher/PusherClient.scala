@@ -106,7 +106,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     channel(channelName, attributes.getOrElse(Seq()).map(PusherChannelAttributes.withName(_)))
   }
 
-  def channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq()): Future[Try[Map[String, Channel]]] = {
+  def channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq()): Future[Try[ChannelMap]] = {
     var uri = generateUri(s"/apps/$appId/channels")
 
     val params = Map(
@@ -116,10 +116,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     uri = signUri("GET", uri.withQuery(params))
 
-    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Map[String, Channel]]))
+    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[ChannelMap]))
   }
   @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead", "0.3")
-  def channels(prefixFilter: String, attributes: Option[Seq[String]]): Future[Try[Map[String, Channel]]] = {
+  def channels(prefixFilter: String, attributes: Option[Seq[String]]): Future[Try[ChannelMap]] = {
     channels(prefixFilter, attributes.getOrElse(Seq()).map(PusherChannelsAttributes.withName(_)))
   }
 

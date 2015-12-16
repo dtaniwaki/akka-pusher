@@ -7,21 +7,6 @@ import org.joda.time.format._
 trait PusherJsonSupport extends DefaultJsonProtocol {
   import PusherModels._
 
-  implicit object ChannelMapJsonSupport extends JsonFormat[Map[String, Channel]] {
-    def write(channels: Map[String, Channel]): JsValue = {
-      JsObject(channels.map {
-        case (name, channel) =>
-          (name, channel.toJson)
-      })
-    }
-    def read(json: JsValue): Map[String, Channel] = {
-      json.asJsObject.fields.map {
-        case (channelName, channelData) =>
-          (channelName, channelData.convertTo[Channel])
-      }
-    }
-  }
-
   implicit object UserListJsonSupport extends JsonFormat[List[User]] {
     def write(users: List[User]): JsValue = {
       JsObject("users" -> JsArray(users.map(_.toJson).toVector))
