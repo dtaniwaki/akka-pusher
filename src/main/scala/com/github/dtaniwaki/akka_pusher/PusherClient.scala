@@ -89,12 +89,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     })
   }
 
-  def channel(channel: String, attributes: Option[Seq[PusherChannelAttributes.Value]] = None): Future[Try[Channel]] = {
-    validateChannel(channel)
-    var uri = generateUri(s"/apps/$appId/channels/$channel")
+  def channel(channelName: String, attributes: Seq[PusherChannelAttributes.Value] = Seq()): Future[Try[Channel]] = {
+    validateChannel(channelName)
+    var uri = generateUri(s"/apps/$appId/channels/$channelName")
 
     val params = Map(
-      "info" -> attributes.map(_.mkString(","))
+      "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
     ).filter(_._2.isDefined).mapValues(_.get)
 
     uri = signUri("GET", uri.withQuery(params))
@@ -102,12 +102,12 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
 
-  def channels(prefixFilter: String, attributes: Option[Seq[PusherChannelsAttributes.Value]] = None): Future[Try[Map[String, Channel]]] = {
+  def channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq()): Future[Try[Map[String, Channel]]] = {
     var uri = generateUri(s"/apps/$appId/channels")
 
     val params = Map(
       "filter_by_prefix" -> Some(prefixFilter),
-      "info" -> attributes.map(_.mkString(","))
+      "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
     ).filter(_._2.isDefined).mapValues(_.get)
 
     uri = signUri("GET", uri.withQuery(params))

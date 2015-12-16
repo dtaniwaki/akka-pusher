@@ -178,7 +178,7 @@ class PusherClientSpec extends Specification
       mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
 
       val pusher = pusherStub(mockedSource)
-      val res = pusher.channel("channel", Some(Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount)))
+      val res = pusher.channel("channel", Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount))
       awaitResult(res) === Success(Channel())
 
       argument.getValue() must equalToHttpGetRequest(
@@ -208,7 +208,7 @@ class PusherClientSpec extends Specification
       mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
 
       val pusher = pusherStub(mockedSource)
-      val res = pusher.channels("prefix", Some(Seq(PusherChannelsAttributes.userCount)))
+      val res = pusher.channels("prefix", Seq(PusherChannelsAttributes.userCount))
       awaitResult(res) === Success(Map[String, Channel]())
 
       argument.getValue() must equalToHttpGetRequest(

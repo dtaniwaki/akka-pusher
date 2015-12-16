@@ -17,11 +17,11 @@ object PusherMessages {
     message: JsValue,
     socketId: Option[String] = None)
   case class ChannelMessage(
-    channel: String,
-    attributes: Option[Seq[PusherChannelAttributes.Value]] = None)
+    channelName: String,
+    attributes: Seq[PusherChannelAttributes.Value] = Seq())
   case class ChannelsMessage(
     prefixFilter: String,
-    attributes: Option[Seq[PusherChannelsAttributes.Value]] = None)
+    attributes: Seq[PusherChannelsAttributes.Value] = Seq())
   case class UsersMessage(
     channel: String)
   case class AuthenticateMessage(

@@ -58,7 +58,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
-          val future = actorRef ? ChannelMessage("channel", Some(Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount)))
+          val future = actorRef ? ChannelMessage("channel", Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount))
           awaitResult(future) === Success(Channel())
         } finally {
           system.stop(actorRef)
@@ -72,7 +72,7 @@ class PusherActorSpec extends Specification
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
-          val future = actorRef ? ChannelsMessage("prefix", Some(Seq(PusherChannelsAttributes.userCount)))
+          val future = actorRef ? ChannelsMessage("prefix", Seq(PusherChannelsAttributes.userCount))
           awaitResult(future) === Success(Map[String, Channel]())
         } finally {
           system.stop(actorRef)
