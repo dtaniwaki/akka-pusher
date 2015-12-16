@@ -54,7 +54,7 @@ class PusherActorSpec extends Specification
     "with ChannelMessage" in {
       "returns Channel" in {
         val pusher = mock[PusherClient].smart
-        pusher.channel(anyString, any) returns Future(Success(Channel()))
+        pusher.channel(anyString, Seq(any)) returns Future(Success(Channel()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {
@@ -68,7 +68,7 @@ class PusherActorSpec extends Specification
     "with ChannelsMessage" in {
       "returns Channels" in {
         val pusher = mock[PusherClient].smart
-        pusher.channels(anyString, any) returns Future(Success(Map[String, Channel]()))
+        pusher.channels(anyString, Seq(any)) returns Future(Success(Map[String, Channel]()))
         val actorRef = system.actorOf(Props(classOf[TestActor], pusher))
 
         try {

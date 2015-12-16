@@ -101,6 +101,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
+  @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead", "0.3")
+  def channel(channelName: String, attributes: Option[Seq[String]]): Future[Try[Channel]] = {
+    channel(channelName, attributes.getOrElse(Seq()).map(PusherChannelAttributes.withName(_)))
+  }
 
   def channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq()): Future[Try[Map[String, Channel]]] = {
     var uri = generateUri(s"/apps/$appId/channels")
@@ -113,6 +117,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     uri = signUri("GET", uri.withQuery(params))
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Map[String, Channel]]))
+  }
+  @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead", "0.3")
+  def channels(prefixFilter: String, attributes: Option[Seq[String]]): Future[Try[Map[String, Channel]]] = {
+    channels(prefixFilter, attributes.getOrElse(Seq()).map(PusherChannelsAttributes.withName(_)))
   }
 
   def users(channel: String): Future[Try[List[User]]] = {
