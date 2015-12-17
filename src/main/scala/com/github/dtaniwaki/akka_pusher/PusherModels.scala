@@ -11,7 +11,7 @@ object PusherModels extends PusherJsonSupport {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
-  class ChannelMap(seq: (String, Channel)*) {
+  case class ChannelMap(seq: (String, Channel)*) {
     private val delegatee = Map[String, Channel](seq: _*)
     def apply(k: String): Channel = delegatee.apply(k)
     def get(k: String): Option[Channel] = delegatee.get(k)
@@ -25,8 +25,6 @@ object PusherModels extends PusherJsonSupport {
     }
   }
   object ChannelMap {
-    def apply(seq: (String, Channel)*): ChannelMap = new ChannelMap(seq: _*)
-
     implicit object ChannelMapJsonSupport extends JsonFormat[ChannelMap] {
       def write(channels: ChannelMap): JsValue = {
         JsObject(channels.map {
@@ -49,7 +47,7 @@ object PusherModels extends PusherJsonSupport {
     implicit val userJsonSupport = jsonFormat(User.apply _, "id")
   }
 
-  class UserList(seq: User*) {
+  case class UserList(seq: User*) {
     private val list = seq.toList
     def apply(n: Int): User = list.apply(n)
     def map[B](f: (User) => B): Iterable[B] = list.map(f)
@@ -62,8 +60,6 @@ object PusherModels extends PusherJsonSupport {
     }
   }
   object UserList {
-    def apply(seq: User*): UserList = new UserList(seq: _*)
-
     implicit object UserListJsonSupport extends JsonFormat[UserList] {
       def write(users: UserList): JsValue = {
         JsObject("users" -> JsArray(users.map(_.toJson).toVector))
