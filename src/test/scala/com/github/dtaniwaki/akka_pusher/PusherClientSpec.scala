@@ -171,7 +171,7 @@ class PusherClientSpec extends Specification
       )
     }
   }
-  "#channel" should {
+  "#channel(channelName: String, attributes: Seq[PusherChannelAttributes.Value] = Seq())" should {
     "make a request to pusher" in {
       val mockedSource = mock[MockedSource]
       val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
@@ -201,7 +201,15 @@ class PusherClientSpec extends Specification
       }
     }
   }
-  "#channels" should {
+  "(deprecated) #channel(channelName: String, attributes: Option[Seq[String]])" should {
+    "call the new channel function" in {
+      val clientMock = mock[PusherClient]
+      clientMock.channel(anyString, anyListOf[PusherChannelAttributes.Value]) returns Future(Success(Channel()))
+      clientMock.channel("channel", Seq(PusherChannelAttributes.userCount))
+      there was one(clientMock).channel("channel", Seq(PusherChannelAttributes.userCount))
+    }
+  }
+  "#channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq())" should {
     "make a request to pusher" in {
       val mockedSource = mock[MockedSource]
       val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
@@ -229,6 +237,14 @@ class PusherClientSpec extends Specification
           """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&auth_signature=[0-9a-f]+"""
         )
       }
+    }
+  }
+  "(deprecated) #channels(prefixFilter: String, attributes: Option[Seq[String]])" should {
+    "call the new channel function" in {
+      val clientMock = mock[PusherClient]
+      clientMock.channels(anyString, Seq(any)) returns Future(Success(ChannelMap()))
+      clientMock.channels("channel", Seq(PusherChannelsAttributes.userCount))
+      there was one(clientMock).channels("channel", Seq(PusherChannelsAttributes.userCount))
     }
   }
   "#users" should {
