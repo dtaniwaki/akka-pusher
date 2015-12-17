@@ -7,6 +7,8 @@
 
 [Pusher](https://pusher.com/) Client under Akka's actor context.
 
+The working sample with Play Framework is available <a href="https://github.com/dtaniwaki/akka-pusher-play-app" target="_blank">here</a>.
+
 ## Prerequisites
 
 - Java 8 or higher
@@ -43,8 +45,6 @@ val system = ActorSystem("pusher")
 val pusherActor = system.actorOf(PusherActor.props(), "pusher-actor")
 pusherActor ! TriggerMessage("test_channel", "my_event", "hello world")
 ```
-
-A working sample is available [here](https://github.com/dtaniwaki/akka-pusher-play-app).
 
 ### API
 
