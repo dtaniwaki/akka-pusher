@@ -73,6 +73,47 @@ class PusherModelsSpec extends Specification
         }
       }
     }
+    "#apply" should {
+      "return the instance" in {
+        val userList = UserList(User("foo"))
+        userList(0) === User("foo")
+      }
+    }
+    "#map" should {
+      "make the iterations" in {
+        val userList = UserList(User("foo"))
+        userList.map { user =>
+          user.toString
+        } === Seq(User("foo").toString)
+      }
+    }
+    "#foreach" should {
+      "make the iterations" in {
+        val userList = UserList(User("foo"))
+        var id: String = null
+        userList foreach { user =>
+          id = user.id
+        }
+        id === "foo"
+      }
+    }
+    "#equals" should {
+      "return true with the same map" in {
+        val userList1 = UserList(User("foo"))
+        val userList2 = UserList(User("foo"))
+        userList1 === userList2
+      }
+      "return false with the different map" in {
+        val userList1 = UserList(User("foo"))
+        val userList2 = UserList(User("bar"))
+        userList1 !== userList2
+      }
+      "return false with the different value" in {
+        val userList1 = UserList(User("foo"))
+        val userList2 = "foo"
+        userList1 !== userList2
+      }
+    }
   }
   "ChannelMap" in {
     "ChannelMapJsonFormat" should {
@@ -101,6 +142,57 @@ class PusherModelsSpec extends Specification
           val channels = ChannelMap()
           channels.toJson === """{}""".parseJson
         }
+      }
+    }
+    "#apply" should {
+      "return the instance" in {
+        val channelMap = ChannelMap("foo" -> Channel())
+        channelMap("foo") === Channel()
+      }
+    }
+    "#get" should {
+      "return the instance" in {
+        val channelMap = ChannelMap("foo" -> Channel())
+        channelMap.get("foo") === Some(Channel())
+      }
+    }
+    "#map" should {
+      "make the iterations" in {
+        val channelMap = ChannelMap("foo" -> Channel())
+        channelMap.map {
+          case (name, channel) =>
+            (name, channel)
+        } === Seq(("foo", Channel()))
+      }
+    }
+    "#foreach" should {
+      "make the iterations" in {
+        val channelMap = ChannelMap("foo" -> Channel())
+        var name: String = null
+        var channel: Channel = null
+        channelMap foreach {
+          case (_name, _channel) =>
+            name = _name
+            channel = _channel
+        }
+        (name, channel) === ("foo", Channel())
+      }
+    }
+    "#equals" should {
+      "return true with the same map" in {
+        val channelMap1 = ChannelMap("foo" -> Channel())
+        val channelMap2 = ChannelMap("foo" -> Channel())
+        channelMap1 === channelMap2
+      }
+      "return false with the different map" in {
+        val channelMap1 = ChannelMap("foo" -> Channel())
+        val channelMap2 = ChannelMap("bar" -> Channel())
+        channelMap1 !== channelMap2
+      }
+      "return false with the different value" in {
+        val channelMap1 = ChannelMap("foo" -> Channel())
+        val channelMap2 = "foo"
+        channelMap1 !== channelMap2
       }
     }
   }
