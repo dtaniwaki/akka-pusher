@@ -3,7 +3,10 @@ package com.github.dtaniwaki.akka_pusher
 import spray.json._
 
 object PusherEvents extends PusherJsonSupport {
-  sealed abstract class PusherEvent
+  sealed abstract class PusherEvent {
+    val name: String
+    val channel: String
+  }
 
   case class ChannelOccupiedEvent(
     name: String,
