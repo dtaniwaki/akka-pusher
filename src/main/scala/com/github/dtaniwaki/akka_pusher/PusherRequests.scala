@@ -16,7 +16,7 @@ object PusherRequests extends PusherJsonSupport {
     timeMs: DateTime,
     events: Seq[PusherEvent])
   object WebhookRequest {
-    implicit object WebhookRequestJsonSupport extends JsonFormat[WebhookRequest] {
+    implicit object WebhookRequestJsonSupport extends RootJsonFormat[WebhookRequest] {
       def write(res: WebhookRequest): JsValue = {
         val events = res.events.map {
           case event: ChannelOccupiedEvent => event.toJson
