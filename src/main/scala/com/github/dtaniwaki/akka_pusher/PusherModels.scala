@@ -11,12 +11,12 @@ object PusherModels extends PusherJsonSupport {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
-  case class ChannelMap(seq: (String, Channel)*) extends Equals {
-    private val delegatee = Map[String, Channel](seq: _*)
+  case class ChannelMap(_seq: (String, Channel)*) extends Iterable[(String, Channel)] with Equals {
+    private val delegatee = Map[String, Channel](_seq: _*)
+    override val seq = delegatee.seq
     def apply(k: String): Channel = delegatee.apply(k)
     def get(k: String): Option[Channel] = delegatee.get(k)
-    def map[B](f: ((String, Channel)) => B): Iterable[B] = delegatee.map(f)
-    def foreach(f: ((String, Channel)) => Unit): Unit = delegatee.foreach(f)
+    def iterator: Iterator[(String, Channel)] = delegatee.iterator
 
     override def hashCode(): Int = delegatee.hashCode
     override def canEqual(that: Any): Boolean = that.isInstanceOf[ChannelMap]

@@ -178,7 +178,16 @@ class PusherModelsSpec extends Specification
         channelMap.map {
           case (name, channel) =>
             (name, channel)
-        } === Seq(("foo", Channel()))
+        } === List(("foo", Channel()))
+      }
+    }
+    "#flatMap" should {
+      "make the iterations" in {
+        val channelMap = ChannelMap("foo" -> Channel())
+        channelMap.flatMap {
+          case (name, channel) =>
+            List((name, channel))
+        } === List(("foo", Channel()))
       }
     }
     "#foreach" should {
@@ -192,6 +201,15 @@ class PusherModelsSpec extends Specification
             channel = _channel
         }
         (name, channel) === ("foo", Channel())
+      }
+    }
+    "#withFilter" should {
+      "filter the values" in {
+        val channelMap = ChannelMap("foo" -> Channel(), "bar" -> Channel())
+        (channelMap withFilter {
+          case (name, channel) =>
+            name == "foo"
+        }).map { case (name, channel) => (name, channel) } === List(("foo", Channel()))
       }
     }
     "#equals" should {
