@@ -11,16 +11,21 @@ object PusherModels extends PusherJsonSupport {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
-  case class ChannelMap(seq: (String, Channel)*) {
+  case class ChannelMap(seq: (String, Channel)*) extends Equals {
     private val delegatee = Map[String, Channel](seq: _*)
     def apply(k: String): Channel = delegatee.apply(k)
     def get(k: String): Option[Channel] = delegatee.get(k)
     def map[B](f: ((String, Channel)) => B): Iterable[B] = delegatee.map(f)
     def foreach(f: ((String, Channel)) => Unit): Unit = delegatee.foreach(f)
+
+    override def hashCode(): Int = delegatee.hashCode
+    override def canEqual(that: Any): Boolean = that.isInstanceOf[ChannelMap]
     override def equals(that: Any): Boolean = {
       that match {
-        case that: ChannelMap => this.delegatee.equals(that.delegatee)
-        case _                => false
+        case that: ChannelMap if that canEqual this =>
+          this.delegatee.equals(that.delegatee)
+        case _ =>
+          false
       }
     }
   }
@@ -47,15 +52,18 @@ object PusherModels extends PusherJsonSupport {
     implicit val userJsonSupport = jsonFormat(User.apply _, "id")
   }
 
-  case class UserList(seq: User*) {
+  case class UserList(seq: User*) extends Equals {
     private val list = seq.toList
     def apply(n: Int): User = list.apply(n)
     def map[B](f: (User) => B): Iterable[B] = list.map(f)
     def foreach(f: (User) => Unit): Unit = list.foreach(f)
+
+    override def hashCode(): Int = list.hashCode
+    override def canEqual(that: Any): Boolean = that.isInstanceOf[UserList]
     override def equals(that: Any): Boolean = {
       that match {
-        case that: UserList => this.list.equals(that.list)
-        case _              => false
+        case that: UserList if that canEqual this => this.list.equals(that.list)
+        case _                                    => false
       }
     }
   }
