@@ -4,16 +4,18 @@ import akka.actor._
 import akka.pattern.pipe
 import com.github.dtaniwaki.akka_pusher.PusherMessages._
 import com.typesafe.config.{ Config, ConfigFactory }
+import scala.collection.mutable.Queue
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.collection.mutable.Queue
 import org.slf4j.LoggerFactory
 import net.ceedubs.ficus.Ficus._
 
 import scala.util.{ Success, Failure }
 
-class PusherActor(config: Config = ConfigFactory.load()) extends Actor with PusherJsonSupport {
+class PusherActor(
+    config: Config = ConfigFactory.load(),
+    private val batchTriggerQueue: Queue[TriggerMessage] = Queue[TriggerMessage]()) extends Actor with PusherJsonSupport {
   implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
   private lazy val logger = LoggerFactory.getLogger(getClass)
@@ -21,7 +23,6 @@ class PusherActor(config: Config = ConfigFactory.load()) extends Actor with Push
   val batchNumber = 100
   val batchTrigger = config.as[Option[Boolean]]("pusher.batchTrigger").getOrElse(false)
   val batchInterval = Duration(config.as[Option[Int]]("pusher.batchInterval").getOrElse(1000), MILLISECONDS)
-  protected val batchTriggerQueue = Queue[TriggerMessage]()
   protected val scheduler = if (batchTrigger) {
     Some(system.scheduler.schedule(
       batchInterval,

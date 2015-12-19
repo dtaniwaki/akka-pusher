@@ -21,9 +21,8 @@ class TestActor(_pusher: PusherClient) extends PusherActor() {
   override val pusher = _pusher
 }
 
-class TestBatchActor(_pusher: PusherClient, _queue: Queue[TriggerMessage]) extends PusherActor(ConfigFactory.parseString("""pusher: {batchTrigger: true}""")) {
+class TestBatchActor(_pusher: PusherClient, _queue: Queue[TriggerMessage]) extends PusherActor(ConfigFactory.parseString("""pusher: {batchTrigger: true}"""), batchTriggerQueue = _queue) {
   override val pusher = _pusher
-  override val batchTriggerQueue = _queue
 }
 
 class PusherActorSpec extends Specification
