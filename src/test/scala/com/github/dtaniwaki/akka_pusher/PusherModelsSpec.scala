@@ -84,7 +84,15 @@ class PusherModelsSpec extends Specification
         val userList = UserList(User("foo"))
         userList.map { user =>
           user.toString
-        } === Seq(User("foo").toString)
+        } === List(User("foo").toString)
+      }
+    }
+    "#flatMap" should {
+      "make the iterations" in {
+        val userList = UserList(User("foo"))
+        userList.flatMap { user =>
+          List(user.toString)
+        } === List(User("foo").toString)
       }
     }
     "#foreach" should {
@@ -95,6 +103,14 @@ class PusherModelsSpec extends Specification
           id = user.id
         }
         id === "foo"
+      }
+    }
+    "#withFilter" should {
+      "filter the values" in {
+        val userList = UserList(User("foo"), User("bar"))
+        (userList withFilter { user =>
+          user.id == "foo"
+        }).map { case id => id } === List(User("foo"))
       }
     }
     "#equals" should {

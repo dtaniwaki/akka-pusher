@@ -52,17 +52,17 @@ object PusherModels extends PusherJsonSupport {
     implicit val userJsonSupport = jsonFormat(User.apply _, "id")
   }
 
-  case class UserList(seq: User*) extends Equals {
-    private val list = seq.toList
-    def apply(n: Int): User = list.apply(n)
-    def map[B](f: (User) => B): Iterable[B] = list.map(f)
-    def foreach(f: (User) => Unit): Unit = list.foreach(f)
+  case class UserList(_seq: User*) extends Iterable[User] with Equals {
+    private val delegatee = _seq.toList
+    override val seq = delegatee.seq
+    def apply(n: Int): User = delegatee.apply(n)
+    def iterator: Iterator[User] = delegatee.iterator
 
-    override def hashCode(): Int = list.hashCode
+    override def hashCode(): Int = delegatee.hashCode
     override def canEqual(that: Any): Boolean = that.isInstanceOf[UserList]
     override def equals(that: Any): Boolean = {
       that match {
-        case that: UserList if that canEqual this => this.list.equals(that.list)
+        case that: UserList if that canEqual this => this.delegatee.equals(that.delegatee)
         case _                                    => false
       }
     }
