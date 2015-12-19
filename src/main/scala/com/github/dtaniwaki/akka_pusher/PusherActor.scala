@@ -14,8 +14,14 @@ import net.ceedubs.ficus.Ficus._
 import scala.util.{ Success, Failure }
 
 class PusherActor(
-    config: Config = ConfigFactory.load(),
-    private val batchTriggerQueue: Queue[TriggerMessage] = Queue[TriggerMessage]()) extends Actor with PusherJsonSupport {
+    config: Config,
+    private val batchTriggerQueue: Queue[TriggerMessage]) extends Actor with PusherJsonSupport {
+
+  // NOTE: Define redundant constructor to avoid an error to create prop without arguments.
+  def this() = {
+    this(config = ConfigFactory.load(), batchTriggerQueue = Queue[TriggerMessage]())
+  }
+
   implicit val system = context.system
   implicit val ec: ExecutionContext = system.dispatcher
   private lazy val logger = LoggerFactory.getLogger(getClass)
@@ -101,4 +107,5 @@ class PusherActor(
 
 object PusherActor {
   def props(): Props = Props(classOf[PusherActor])
+  def props(config: Config, batchTriggerQueue: Queue[TriggerMessage]): Props = Props(classOf[PusherActor], config, batchTriggerQueue)
 }
