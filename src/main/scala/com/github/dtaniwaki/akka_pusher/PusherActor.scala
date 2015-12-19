@@ -15,11 +15,11 @@ import scala.util.{ Success, Failure }
 
 class PusherActor(
     config: Config,
-    private val batchTriggerQueue: Queue[TriggerMessage]) extends Actor with PusherJsonSupport {
+    private val batchTriggerQueue: Queue[TriggerMessage] = Queue[TriggerMessage]()) extends Actor with PusherJsonSupport {
 
   // NOTE: Define redundant constructor to avoid an error to create prop without arguments.
   def this() = {
-    this(config = ConfigFactory.load(), batchTriggerQueue = Queue[TriggerMessage]())
+    this(config = ConfigFactory.load())
   }
 
   implicit val system = context.system
