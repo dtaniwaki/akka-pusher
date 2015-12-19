@@ -13,14 +13,14 @@ class PusherMessagesSpec extends Specification
 
   "ChannelMessage" in {
     "#apply" should {
-      "convert the argument type (deprecated)" in {
+      "(deprecated) convert the argument type" in {
         ChannelMessage("channel", Some(Seq("user_count"))) === ChannelMessage("channel", Seq(PusherChannelAttributes.userCount))
       }
     }
   }
   "ChannelsMessage" in {
     "#apply" should {
-      "convert the argument type (deprecated)" in {
+      "(deprecated) convert the argument type" in {
         ChannelsMessage("channel", Some(Seq("user_count"))) === ChannelsMessage("channel", Seq(PusherChannelsAttributes.userCount))
       }
     }

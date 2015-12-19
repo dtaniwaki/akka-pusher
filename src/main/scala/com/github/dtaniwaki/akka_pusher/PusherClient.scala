@@ -101,7 +101,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
-  @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead", "0.3")
+  @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
   def channel(channelName: String, attributes: Option[Seq[String]]): Future[Try[Channel]] = {
     channel(channelName, attributes.getOrElse(Seq()).map(PusherChannelAttributes.withName(_)))
   }
@@ -118,7 +118,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[ChannelMap]))
   }
-  @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead", "0.3")
+  @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
   def channels(prefixFilter: String, attributes: Option[Seq[String]]): Future[Try[ChannelMap]] = {
     channels(prefixFilter, attributes.getOrElse(Seq()).map(PusherChannelsAttributes.withName(_)))
   }

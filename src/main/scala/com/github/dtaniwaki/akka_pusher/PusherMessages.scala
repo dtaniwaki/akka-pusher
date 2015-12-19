@@ -10,7 +10,7 @@ object PusherMessages {
     event: String,
     message: JsValue,
     socketId: Option[String] = None)
-  @deprecated("TriggerMessage will be used for BatchTriggerMessage", "0.3")
+  @deprecated("TriggerMessage will be used for BatchTriggerMessage. It will be removed in v0.3", "0.2.3")
   case class BatchTriggerMessage(
     channel: String,
     event: String,
@@ -20,7 +20,7 @@ object PusherMessages {
     channelName: String,
     attributes: Seq[PusherChannelAttributes.Value] = Seq())
   object ChannelMessage {
-    @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead", "0.3")
+    @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
     def apply(channel: String, attributes: Option[Seq[String]]): ChannelMessage = {
       new ChannelMessage(channel, attributes.getOrElse(Seq()).map(PusherChannelAttributes.withName(_)))
     }
@@ -29,7 +29,7 @@ object PusherMessages {
     prefixFilter: String,
     attributes: Seq[PusherChannelsAttributes.Value] = Seq())
   object ChannelsMessage {
-    @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead", "0.3")
+    @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
     def apply(prefixFilter: String, attributes: Option[Seq[String]]): ChannelsMessage = {
       new ChannelsMessage(prefixFilter, attributes.getOrElse(Seq()).map(PusherChannelsAttributes.withName(_)))
     }
