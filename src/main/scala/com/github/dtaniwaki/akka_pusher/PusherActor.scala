@@ -100,5 +100,5 @@ class PusherActor(
 }
 
 object PusherActor {
-  def props(): Props = Props(new PusherActor())
+  def props(): Props = Props(classOf[PusherActor])
 }
