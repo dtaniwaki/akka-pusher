@@ -214,12 +214,12 @@ class PusherActorSpec extends Specification
           system.stop(actorRef)
         }
       }
-      "with more than 100 messages" in {
-        "handle the batch trigger in batches of 100 messages" in {
+      "with more than 10 messages" in {
+        "handle the batch trigger in batches of 10 messages" in {
           val pusher = mock[PusherClient].smart
           val queue = Queue[TriggerMessage]()
           pusher.trigger(any)(any) returns Future(Success(Result("")))
-          val messages = for (n <- 0 to 102) yield TriggerMessage(s"channel${n}", s"event${n}", JsString(s"message${n}"), Some("123.234"))
+          val messages = for (n <- 0 to 12) yield TriggerMessage(s"channel${n}", s"event${n}", JsString(s"message${n}"), Some("123.234"))
           messages foreach { message => queue.enqueue(message) }
           val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
 
@@ -227,8 +227,8 @@ class PusherActorSpec extends Specification
             actorRef ! BatchTriggerTick()
             Thread.sleep(0) // yield to other threads
             Thread.sleep(500)
-            there was one(pusher).trigger(===(messages.slice(0, 100).map(TriggerMessage.unapply(_).get)))(any)
-            there was one(pusher).trigger(===(messages.slice(100, 103).map(TriggerMessage.unapply(_).get)))(any)
+            there was one(pusher).trigger(===(messages.slice(0, 10).map(TriggerMessage.unapply(_).get)))(any)
+            there was one(pusher).trigger(===(messages.slice(10, 13).map(TriggerMessage.unapply(_).get)))(any)
             queue.dequeueAll(_ => true).length === 0
           } finally {
             system.stop(actorRef)

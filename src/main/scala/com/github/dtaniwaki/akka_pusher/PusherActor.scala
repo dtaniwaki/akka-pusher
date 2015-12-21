@@ -26,7 +26,7 @@ class PusherActor(
   implicit val ec: ExecutionContext = system.dispatcher
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
-  val batchNumber = 100
+  val batchSize = config.as[Option[Int]]("pusher.batchSize").getOrElse(10) // Undoc but just in case...
   val batchTrigger = config.as[Option[Boolean]]("pusher.batchTrigger").getOrElse(false)
   val batchInterval = Duration(config.as[Option[Int]]("pusher.batchInterval").getOrElse(1000), MILLISECONDS)
   protected val scheduler = if (batchTrigger) {
@@ -56,7 +56,7 @@ class PusherActor(
       case TriggerMessage(channel, event, message, socketId) =>
         pusher.trigger(channel, event, message, socketId)
       case triggers: Seq[_] if triggers.forall(_.isInstanceOf[TriggerMessage]) =>
-        Future.sequence(triggers.map(_.asInstanceOf[TriggerMessage]).grouped(batchNumber).map { triggers =>
+        Future.sequence(triggers.map(_.asInstanceOf[TriggerMessage]).grouped(batchSize).map { triggers =>
           pusher.trigger(triggers.map(TriggerMessage.unapply(_).get))
         })
       case ChannelMessage(channel, attributes) =>
@@ -74,7 +74,7 @@ class PusherActor(
         true
       case BatchTriggerTick() if batchTrigger =>
         var n = 0
-        val triggers = batchTriggerQueue.dequeueAll { _ => n += 1; n <= batchNumber }
+        val triggers = batchTriggerQueue.dequeueAll { _ => n += 1; n <= batchSize }
         pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
           case Success(_) => // Do Nothing
           case Failure(e) => logger.warn(e.getMessage)

@@ -3,6 +3,7 @@ package com.github.dtaniwaki.akka_pusher
 import spray.json.JsonWriter
 
 trait PusherValidator {
+  private val maxBatchSize = 10
   private val channelPattern = """^([A-Za-z0-9_\-=@,.;]+)$""".r
   private val socketIdPattern = """^(\d+\.\d+)$""".r
 
@@ -18,7 +19,7 @@ trait PusherValidator {
   def validateSocketId(socketId: Option[String]): Unit = socketId.map(validateSocketId)
 
   def validateTriggers[T](triggers: Seq[(String, String, T, Option[String])]): Unit = {
-    require(triggers.length <= 100, s"The length of the triggers is too many: ${triggers.length}")
+    require(triggers.length <= maxBatchSize, s"The length of the triggers is too many: ${triggers.length}")
     triggers.foreach {
       case (channel, eventName, data, socketId) =>
         validateChannel(channel)

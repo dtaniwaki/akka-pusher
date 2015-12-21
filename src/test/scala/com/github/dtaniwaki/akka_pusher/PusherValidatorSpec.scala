@@ -135,22 +135,22 @@ class PusherValidatorSpec extends Specification
         validateTriggers(triggers)
       } must not(throwA[Exception])
     }
-    "with 100 triggers" in {
+    "with 10 triggers" in {
       "be invalid" in {
-        val triggers = for (n <- 1 to 100) yield ("channel1", "event1", "message1", Some("123.234"))
+        val triggers = for (n <- 1 to 10) yield ("channel1", "event1", "message1", Some("123.234"))
 
         {
           validateTriggers(triggers)
         } must not(throwA[Exception])
       }
     }
-    "with more than 100 triggers" in {
+    "with more than 10 triggers" in {
       "be invalid" in {
-        val triggers = for (n <- 1 to 101) yield ("channel1", "event1", "message1", Some("123.234"))
+        val triggers = for (n <- 1 to 11) yield ("channel1", "event1", "message1", Some("123.234"))
 
         {
           validateTriggers(triggers)
-        } must throwA(new IllegalArgumentException(s"requirement failed: The length of the triggers is too many: 101"))
+        } must throwA(new IllegalArgumentException(s"requirement failed: The length of the triggers is too many: 11"))
       }
     }
     "with invalid channel" in {
