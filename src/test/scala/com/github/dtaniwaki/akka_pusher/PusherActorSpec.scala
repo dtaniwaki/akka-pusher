@@ -235,6 +235,23 @@ class PusherActorSpec extends Specification
           }
         }
       }
+      "with no messages" in {
+        "does not trigger" in {
+          val pusher = mock[PusherClient].smart
+          val queue = Queue[TriggerMessage]()
+          pusher.trigger(any)(any) returns Future(Success(Result("")))
+          val actorRef = system.actorOf(Props(classOf[TestBatchActor], pusher, queue))
+
+          try {
+            actorRef ! BatchTriggerTick()
+            Thread.sleep(0) // yield to other threads
+            Thread.sleep(500)
+            there was no(pusher).trigger(any)(any)
+          } finally {
+            system.stop(actorRef)
+          }
+        }
+      }
     }
     "scheduler" should {
       "send BatchTriggerTick periodically" in {
