@@ -75,12 +75,14 @@ class PusherActor(
       case BatchTriggerTick() if batchTrigger =>
         var n = 0
         val triggers = batchTriggerQueue.dequeueAll { _ => n += 1; n <= batchSize }
-        pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
-          case Success(_) => // Do Nothing
-          case Failure(e) => logger.warn(e.getMessage)
+        if (triggers.nonEmpty) {
+          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
+            case Success(_) => // Do Nothing
+            case Failure(e) => logger.warn(e.getMessage)
+          }
+          if (batchTriggerQueue.nonEmpty)
+            self ! BatchTriggerTick()
         }
-        if (batchTriggerQueue.nonEmpty)
-          self ! BatchTriggerTick()
         triggers.length
       case _ =>
     }
