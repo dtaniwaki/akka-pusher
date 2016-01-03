@@ -8,7 +8,7 @@ crossScalaVersions := Seq("2.10.6", "2.11.7")
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
 
 val akkaV = "2.3.14"
-val akkaHttpV = "1.0"
+val akkaHttpV = "2.0.1"
 val sprayJsonV = "1.3.2"
 val specs2V = "3.6.4"
 
