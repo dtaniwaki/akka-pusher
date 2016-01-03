@@ -97,7 +97,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
     ).filter(_._2.isDefined).mapValues(_.get)
 
-    uri = signUri("GET", uri.withQuery(params))
+    uri = signUri("GET", uri.withQuery(Uri.Query(params)))
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
   }
@@ -114,7 +114,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
     ).filter(_._2.isDefined).mapValues(_.get)
 
-    uri = signUri("GET", uri.withQuery(params))
+    uri = signUri("GET", uri.withQuery(Uri.Query(params)))
 
     request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[ChannelMap]))
   }
@@ -153,7 +153,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
         case (Success(response), _) =>
           response.entity.withContentType(ContentTypes.`application/json`)
             .toStrict(5 seconds)
-            .map(_.data.decodeString(response.entity.contentType.charset.value))
+            .map(_.data.decodeString(response.entity.contentType.charsetOption.map(_.value).getOrElse("UTF8")))
             .map { body =>
               response.status match {
                 case StatusCodes.OK           => Success(body)
@@ -183,10 +183,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       val serializedData = data.get
       params = params :+ ("body_md5", md5(serializedData))
     }
-    signedUri = signedUri.withQuery(params ++ uri.query.toList: _*)
+    signedUri = signedUri.withQuery(Uri.Query((params ++ uri.query().toList): _*))
 
-    val signingString = s"$method\n${uri.path}\n${signedUri.query.toString}"
-    signedUri.withQuery(signedUri.query.toList :+ ("auth_signature", signature(signingString)): _*)
+    val signingString = s"$method\n${uri.path}\n${signedUri.queryString()}"
+    signedUri.withQuery(Uri.Query((signedUri.query().toList :+ ("auth_signature", signature(signingString))): _*))
   }
 
   private def signature(value: String): String = {
