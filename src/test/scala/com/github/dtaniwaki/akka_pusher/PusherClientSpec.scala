@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.model.MediaTypes._
 import akka.stream.scaladsl.Flow
+import org.joda.time.DateTimeUtils
 import org.specs2.mock.Mockito
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.attributes.{PusherChannelsAttributes, PusherChannelAttributes}
@@ -29,6 +30,7 @@ class PusherClientSpec extends Specification
 {
   implicit val system: ActorSystem = ActorSystem("pusher-client")
   implicit val materializer = ActorMaterializer()
+  DateTimeUtils.setCurrentMillisFixed(1452184169130L)
 
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
 
@@ -47,7 +49,7 @@ class PusherClientSpec extends Specification
       val actualMethod = e.value.method
       val actualUri = actualReq.uri.toString
       result(
-        actualMethod == GET && actualUri.matches(uri),
+        actualMethod == GET && actualUri == uri,
         s"HttpRequest(${actualMethod}, ${actualUri})\n is (GET, ${uri})",
         s"HttpRequest(${actualMethod}, ${actualUri})\n is not (GET, ${uri})",
         e
@@ -62,7 +64,7 @@ class PusherClientSpec extends Specification
       val actualUri = actualReq.uri.toString
       val actualBodyJson = awaitResult(actualReq.entity.toStrict(5 seconds).map(_.data.decodeString("UTF-8"))).parseJson
       result(
-        actualMethod == POST && actualUri.matches(uri) && actualBodyJson == bodyJson,
+        actualMethod == POST && actualUri == uri && actualBodyJson == bodyJson,
         s"HttpRequest(${actualMethod}, ${actualUri}, ${actualBodyJson})\n is (POST, ${uri}, ${bodyJson})",
         s"HttpRequest(${actualMethod}, ${actualUri}, ${actualBodyJson})\n is not (POST, ${uri}, ${bodyJson})",
         e
@@ -89,7 +91,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(Result(""))
 
       pusher.consumedRequest must equalToHttpPostRequest(
-        """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
+        """http://api.pusherapp.com/apps/app/events?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&body_md5=567be22be06070b3cf618f8bc59efa74&auth_signature=59a8f724d3487bde7dcc51a13d9b6d2747fb80d22ed824ada51d5b0e60f42c1e""",
         """{"data":"\"message\"","name":"event","channels":["channel1","channel2"],"socket_id":"123.234"}""".parseJson
       )
     }
@@ -100,7 +102,7 @@ class PusherClientSpec extends Specification
         awaitResult(res) === Success(Result(""))
 
         pusher.consumedRequest must equalToHttpPostRequest(
-          """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
+          """http://api.pusherapp.com/apps/app/events?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&body_md5=a263789fb4fa6eea04c6f0f1ed57c827&auth_signature=5092137acbdb89a5c5f3d3b69b359c19c87b11a7e3e5492559d366ce011e259b""",
           """{"data":"\"message\"","name":"event","channels":["channel1","channel2"]}""".parseJson
         )
       }
@@ -113,7 +115,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(Result(""))
 
       pusher.consumedRequest must equalToHttpPostRequest(
-        """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
+        """http://api.pusherapp.com/apps/app/events?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&body_md5=4caaeb8a1a2a881977ab8dbbedb44165&auth_signature=edf2aa45294d7128b4d4669d9583eb27f5fb481e064668efea4eca955588cbf6""",
         """{"data":"\"message\"","name":"event","channels":["channel"]}""".parseJson
       )
     }
@@ -125,7 +127,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(Result(""))
 
       pusher.consumedRequest must equalToHttpPostRequest(
-        """(http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+)""",
+        """http://api.pusherapp.com/apps/app/events?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&body_md5=9f368a70902d7977ad32b4fdd01e8929&auth_signature=cfdafb4b8f6cfd6ffe69f8531f7fa9411c01a49617ccab74ead60715f3453fdf""",
         """{"data":"\"message\"","name":"event","channels":["channel"],"socket_id":"123.234"}""".parseJson
       )
     }
@@ -140,7 +142,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(Result(""))
 
       pusher.consumedRequest must equalToHttpPostRequest(
-        """(http://api.pusherapp.com/apps/app/batch_events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+)""",
+        """http://api.pusherapp.com/apps/app/batch_events?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&body_md5=27ca0add3a65dd8d8300d03f11c2cfdb&auth_signature=e5db0134b6da74adff472638f77d2f2f73d0f259584701995afc49ae33d66d33""",
         """
           {"batch":[
             {"data":"\"message1\"","name":"event1","channel":"channel1","socket_id":"123.234"},
@@ -157,7 +159,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(Channel())
 
       pusher.consumedRequest must equalToHttpGetRequest(
-        """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&info=subscription_count,user_count&auth_signature=[0-9a-f]+"""
+        """http://api.pusherapp.com/apps/app/channels/channel?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&info=subscription_count,user_count&auth_signature=135e1dada101b10e127f5ba7bfbbf810d24463fb0820922ba781a5cc47bf633e"""
       )
     }
     "without attributes" in {
@@ -167,7 +169,7 @@ class PusherClientSpec extends Specification
         awaitResult(res) === Success(Channel())
 
         pusher.consumedRequest must equalToHttpGetRequest(
-          """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&auth_signature=[0-9a-f]+"""
+          """http://api.pusherapp.com/apps/app/channels/channel?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&auth_signature=4898a6b178f2a53a88285f4f937bdce663dc43aa942dcb84fb84d86ec904c6aa"""
         )
       }
     }
@@ -187,7 +189,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(ChannelMap())
 
       pusher.consumedRequest must equalToHttpGetRequest(
-        """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&info=user_count&auth_signature=[0-9a-f]+"""
+        """http://api.pusherapp.com/apps/app/channels?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&filter_by_prefix=prefix&info=user_count&auth_signature=5fbace1f69182f30f977fb6f7004fcab587fd2339fe3f5de4288ff734a86cf6e"""
       )
     }
     "without attributes" in {
@@ -197,7 +199,7 @@ class PusherClientSpec extends Specification
         awaitResult(res) === Success(ChannelMap())
 
         pusher.consumedRequest must equalToHttpGetRequest(
-          """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&auth_signature=[0-9a-f]+"""
+          """http://api.pusherapp.com/apps/app/channels?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&filter_by_prefix=prefix&auth_signature=748998ffe9e177acfea1b7cb8213f5c969b79b9aa0d54e477538e26c5b998bf9"""
         )
       }
     }
@@ -217,7 +219,7 @@ class PusherClientSpec extends Specification
       awaitResult(res) === Success(UserList())
 
       pusher.consumedRequest must equalToHttpGetRequest(
-        """http://api.pusherapp.com/apps/app/channels/channel/users\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&auth_signature=[0-9a-f]+"""
+        """http://api.pusherapp.com/apps/app/channels/channel/users?auth_key=key&auth_timestamp=1452184169&auth_version=1.0&auth_signature=04baeea473d69c1c104b4b306c1fde000f75b2baf9a39a50d01d7fc5d9c80268"""
       )
     }
   }

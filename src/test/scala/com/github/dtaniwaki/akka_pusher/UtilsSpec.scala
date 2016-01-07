@@ -1,5 +1,6 @@
 package com.github.dtaniwaki.akka_pusher
 
+import akka.http.scaladsl.model.Uri
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 
@@ -23,6 +24,14 @@ class UtilsSpec extends Specification
     "generate hex digest sha256 of strings with 日本語" in {
       Utils.sha256("secret", "Digest me 日本語") === "b52446253d26c4bd19c1200e310ddc8ff3678f3422b2df6c47b153209cadec0b"
       // echo -n "Digest me 日本語" | openssl dgst -sha256 -hmac "secret"
+    }
+  }
+  "#normalizeQuery" should {
+    "make the key lower case" in {
+      Utils.normalizeQuery(Uri.Query(Map("abc" -> "abc", "CDE" -> "CDE"))).toString === "abc=abc&cde=CDE"
+    }
+    "make the order alphabetical" in {
+      Utils.normalizeQuery(Uri.Query(Map("cde" -> "cde", "abc" -> "abc"))).toString === "abc=abc&cde=cde"
     }
   }
 }
