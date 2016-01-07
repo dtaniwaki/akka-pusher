@@ -185,8 +185,8 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       params = params :+ ("body_md5", md5(serializedData))
     }
     signedUri = signedUri.withQuery(Uri.Query((params ++ uri.query().toList): _*))
-
-    val signingString = s"$method\n${uri.path}\n${signedUri.queryString()}"
+    val normalizedQuery = normalizeQuery(signedUri.query())
+    val signingString = s"$method\n${uri.path}\n${normalizedQuery.toString}"
     signedUri.withQuery(Uri.Query((signedUri.query().toList :+ ("auth_signature", signature(signingString))): _*))
   }
 

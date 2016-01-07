@@ -5,6 +5,8 @@ import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
+import akka.http.scaladsl.model.Uri
+
 object Utils {
   val HEX = 16
   val LENGTH = 32
@@ -37,5 +39,9 @@ object Utils {
 
     val bigInteger = new BigInteger(1, digest)
     String.format("%0" + (digest.length << 1) + "x", bigInteger)
+  }
+
+  def normalizeQuery(query: Uri.Query): Uri.Query = {
+    Uri.Query(query.map { case (k, v) => (k.toString.toLowerCase, v) }.sortBy(_._1): _*)
   }
 }
