@@ -5,11 +5,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.model.MediaTypes._
-import com.github.dtaniwaki.akka_pusher.PusherModels._
-import com.github.dtaniwaki.akka_pusher.attributes.{PusherChannelAttributes, PusherChannelsAttributes}
-import com.typesafe.config.ConfigFactory
-import org.mockito.{ArgumentCaptor}
+import akka.stream.scaladsl.Flow
 import org.specs2.mock.Mockito
+import com.github.dtaniwaki.akka_pusher.PusherModels._
+import com.github.dtaniwaki.akka_pusher.attributes.{PusherChannelsAttributes, PusherChannelAttributes}
+import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.Specification
 import org.specs2.specification.process.RandomSequentialExecution
 import org.specs2.matcher.{Expectable, Matcher}
@@ -19,6 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Try, Success}
+import scala.language.reflectiveCalls
 
 class PusherClientSpec extends Specification
   with RandomSequentialExecution
@@ -31,15 +32,13 @@ class PusherClientSpec extends Specification
 
   private def awaitResult[A](future: Future[A]) = Await.result(future, Duration.Inf)
 
-  private def createJsonResponse(responseString: String): Future[(Try[HttpResponse], Int)] =
-    Future((Try(new HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentType(`application/json`), responseString))), 0))
-
-  private def pusherStub(mockedSource: MockedSource) = new PusherClient() {
-    override def source(req: HttpRequest): Future[(Try[HttpResponse], Int)] = mockedSource.hit(req)
-  }
-
-  class MockedSource {
-    def hit(req: HttpRequest) = createJsonResponse("")
+  private def pusherStub(responseBody: String) = new PusherClient() {
+    var consumedRequest: HttpRequest = null
+    override val pool: Flow[(HttpRequest, Int), (Try[HttpResponse], Int), Any] = Flow[(HttpRequest, Int)].map {
+      case (request, n) =>
+        consumedRequest = request
+        (Success(HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentType(`application/json`), responseBody))), n)
+    }
   }
 
   class HttpGetRequestMatcher(uri: String) extends Matcher[HttpRequest] {
@@ -85,30 +84,22 @@ class PusherClientSpec extends Specification
 
   "#trigger(channels: Seq[String], event: String, data: T, socketId: Option[String] = None)" should {
     "make a request to the the channels" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("")
       val res = pusher.trigger(Seq("channel1", "channel2"), "event", "message", Some("123.234"))
       awaitResult(res) === Success(Result(""))
 
-      argument.getValue() must equalToHttpPostRequest(
+      pusher.consumedRequest must equalToHttpPostRequest(
         """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
         """{"data":"\"message\"","name":"event","channels":["channel1","channel2"],"socket_id":"123.234"}""".parseJson
       )
     }
     "without socket" in {
       "make a request to the channels" in {
-        val mockedSource = mock[MockedSource]
-        val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-        mockedSource.hit(argument.capture()) returns createJsonResponse("")
-
-        val pusher = pusherStub(mockedSource)
+        val pusher = pusherStub("")
         val res = pusher.trigger(Seq("channel1", "channel2"), "event", "message")
         awaitResult(res) === Success(Result(""))
 
-        argument.getValue() must equalToHttpPostRequest(
+        pusher.consumedRequest must equalToHttpPostRequest(
           """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
           """{"data":"\"message\"","name":"event","channels":["channel1","channel2"]}""".parseJson
         )
@@ -117,15 +108,11 @@ class PusherClientSpec extends Specification
   }
   "#trigger(channel: String, event: String, data: T)" should {
     "make a request to the channel" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("")
       val res = pusher.trigger("channel", "event", "message")
       awaitResult(res) === Success(Result(""))
 
-      argument.getValue() must equalToHttpPostRequest(
+      pusher.consumedRequest must equalToHttpPostRequest(
         """http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+""",
         """{"data":"\"message\"","name":"event","channels":["channel"]}""".parseJson
       )
@@ -133,15 +120,11 @@ class PusherClientSpec extends Specification
   }
   "#trigger(channel: String, event: String, data: T, socketId: Option[String])" should {
     "make a request to the channel" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("")
       val res = pusher.trigger("channel", "event", "message", Some("123.234"))
       awaitResult(res) === Success(Result(""))
 
-      argument.getValue() must equalToHttpPostRequest(
+      pusher.consumedRequest must equalToHttpPostRequest(
         """(http://api.pusherapp.com/apps/app/events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+)""",
         """{"data":"\"message\"","name":"event","channels":["channel"],"socket_id":"123.234"}""".parseJson
       )
@@ -149,18 +132,14 @@ class PusherClientSpec extends Specification
   }
   "#trigger(Seq((channel: String, event: String, data: T, socketId: Option[String])))" should {
     "make a request to the channels" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("")
       val res = pusher.trigger(Seq(
         ("channel1", "event1", "message1", Some("123.234")),
         ("channel2", "event2", "message2", Some("234.345"))
       ))
       awaitResult(res) === Success(Result(""))
 
-      argument.getValue() must equalToHttpPostRequest(
+      pusher.consumedRequest must equalToHttpPostRequest(
         """(http://api.pusherapp.com/apps/app/batch_events\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&body_md5=[0-9a-f]+&auth_signature=[0-9a-f]+)""",
         """
           {"batch":[
@@ -173,29 +152,21 @@ class PusherClientSpec extends Specification
   }
   "#channel(channelName: String, attributes: Seq[PusherChannelAttributes.Value] = Seq())" should {
     "make a request to pusher" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("{}")
       val res = pusher.channel("channel", Seq(PusherChannelAttributes.subscriptionCount, PusherChannelAttributes.userCount))
       awaitResult(res) === Success(Channel())
 
-      argument.getValue() must equalToHttpGetRequest(
+      pusher.consumedRequest must equalToHttpGetRequest(
         """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&info=subscription_count,user_count&auth_signature=[0-9a-f]+"""
       )
     }
     "without attributes" in {
       "make a request to pusher" in {
-        val mockedSource = mock[MockedSource]
-        val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-        mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
-
-        val pusher = pusherStub(mockedSource)
+        val pusher = pusherStub("{}")
         val res = pusher.channel("channel")
         awaitResult(res) === Success(Channel())
 
-        argument.getValue() must equalToHttpGetRequest(
+        pusher.consumedRequest must equalToHttpGetRequest(
           """http://api.pusherapp.com/apps/app/channels/channel\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&auth_signature=[0-9a-f]+"""
         )
       }
@@ -211,29 +182,21 @@ class PusherClientSpec extends Specification
   }
   "#channels(prefixFilter: String, attributes: Seq[PusherChannelsAttributes.Value] = Seq())" should {
     "make a request to pusher" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("{}")
       val res = pusher.channels("prefix", Seq(PusherChannelsAttributes.userCount))
       awaitResult(res) === Success(ChannelMap())
 
-      argument.getValue() must equalToHttpGetRequest(
+      pusher.consumedRequest must equalToHttpGetRequest(
         """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&info=user_count&auth_signature=[0-9a-f]+"""
       )
     }
     "without attributes" in {
       "make a request to pusher" in {
-        val mockedSource = mock[MockedSource]
-        val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-        mockedSource.hit(argument.capture()) returns createJsonResponse("{}")
-
-        val pusher = pusherStub(mockedSource)
+        val pusher = pusherStub("{}")
         val res = pusher.channels("prefix")
         awaitResult(res) === Success(ChannelMap())
 
-        argument.getValue() must equalToHttpGetRequest(
+        pusher.consumedRequest must equalToHttpGetRequest(
           """http://api.pusherapp.com/apps/app/channels\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&filter_by_prefix=prefix&auth_signature=[0-9a-f]+"""
         )
       }
@@ -249,15 +212,11 @@ class PusherClientSpec extends Specification
   }
   "#users" should {
     "make a request to pusher" in {
-      val mockedSource = mock[MockedSource]
-      val argument: ArgumentCaptor[HttpRequest] = ArgumentCaptor.forClass(classOf[HttpRequest])
-      mockedSource.hit(argument.capture()) returns createJsonResponse("""{"users" : []}""")
-
-      val pusher = pusherStub(mockedSource)
+      val pusher = pusherStub("""{"users" : []}""")
       val res = pusher.users("channel")
       awaitResult(res) === Success(UserList())
 
-      argument.getValue() must equalToHttpGetRequest(
+      pusher.consumedRequest must equalToHttpGetRequest(
         """http://api.pusherapp.com/apps/app/channels/channel/users\?auth_key=key&auth_timestamp=[\d]+&auth_version=1\.0&auth_signature=[0-9a-f]+"""
       )
     }

@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.github.dtaniwaki.akka_pusher.PusherExceptions._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
@@ -40,12 +40,17 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   logger.debug(s"ssl.......... ${ssl}")
 
   implicit val materializer = ActorMaterializer()(system)
-  private val (pool, scheme) = if (ssl) {
-    (Http(system).cachedHostConnectionPoolTls[Int](host), "https")
-  } else {
-    (Http(system).cachedHostConnectionPool[Int](host), "http")
-  }
   implicit val ec: ExecutionContext = system.dispatcher
+  protected val pool: Flow[(HttpRequest, Int), (Try[HttpResponse], Int), Any] = if (ssl) {
+    Http(system).cachedHostConnectionPoolTls[Int](host)
+  } else {
+    Http(system).cachedHostConnectionPool[Int](host)
+  }
+  private val scheme = if (ssl) {
+    "https"
+  } else {
+    "http"
+  }
 
   def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Try[Result]] = {
     validateChannel(channels)
@@ -141,14 +146,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     key == _key && signature(body) == _signature
   }
 
-  protected def source(req: HttpRequest): Future[(Try[HttpResponse], Int)] = {
-    Source.single(req, 0)
+  private def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[Try[String]] = {
+    Source.single(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders), 0)
       .via(pool)
       .runWith(Sink.head)
-  }
-
-  protected def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[Try[String]] = {
-    source(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders))
       .flatMap {
         case (Success(response), _) =>
           response.entity.withContentType(ContentTypes.`application/json`)
