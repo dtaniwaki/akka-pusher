@@ -15,6 +15,7 @@ import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, P
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import akka.http.scaladsl.model.Uri
+import org.joda.time.DateTimeUtils
 import org.slf4j.LoggerFactory
 import spray.json._
 import scala.concurrent.ExecutionContext
@@ -177,7 +178,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     var signedUri = uri
     var params = List(
       ("auth_key", key),
-      ("auth_timestamp", (System.currentTimeMillis / 1000).toString),
+      ("auth_timestamp", (DateTimeUtils.currentTimeMillis() / 1000).toString),
       ("auth_version", "1.0")
     )
     if (data.isDefined) {
