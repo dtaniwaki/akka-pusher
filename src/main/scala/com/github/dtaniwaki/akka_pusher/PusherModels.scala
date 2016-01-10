@@ -2,6 +2,8 @@ package com.github.dtaniwaki.akka_pusher
 
 import spray.json._
 
+import scala.collection.{ IterableLike, mutable, TraversableLike }
+
 object PusherModels extends PusherJsonSupport {
   case class Channel(
     occupied: Option[Boolean] = None,
@@ -11,12 +13,15 @@ object PusherModels extends PusherJsonSupport {
     implicit val channelJsonSupport = jsonFormat(Channel.apply, "occupied", "user_count", "subscription_count")
   }
 
-  case class ChannelMap(_seq: (String, Channel)*) extends Iterable[(String, Channel)] with Equals {
-    private val delegatee = Map[String, Channel](_seq: _*)
+  case class ChannelMap(channels: Map[String, Channel]) extends Iterable[(String, Channel)] with IterableLike[(String, Channel), ChannelMap] with Equals {
+    private val delegatee = channels
     override val seq = delegatee.seq
+    def this(seq: ((String, Channel))*) = this(Map(seq: _*))
     def apply(k: String): Channel = delegatee.apply(k)
     def get(k: String): Option[Channel] = delegatee.get(k)
-    def iterator: Iterator[(String, Channel)] = delegatee.iterator
+    override val iterator: Iterator[(String, Channel)] = delegatee.iterator
+    override def newBuilder: mutable.Builder[(String, Channel), ChannelMap] =
+      delegatee.genericBuilder.mapResult { channels => ChannelMap(channels.toSeq: _*) }
 
     override def hashCode(): Int = delegatee.hashCode
     override def canEqual(that: Any): Boolean = that.isInstanceOf[ChannelMap]
@@ -30,6 +35,7 @@ object PusherModels extends PusherJsonSupport {
     }
   }
   object ChannelMap {
+    def apply(seq: (String, Channel)*): ChannelMap = new ChannelMap(seq: _*)
     implicit object ChannelMapJsonSupport extends JsonFormat[ChannelMap] {
       def write(channels: ChannelMap): JsValue = {
         JsObject(channels.map {
@@ -52,11 +58,14 @@ object PusherModels extends PusherJsonSupport {
     implicit val userJsonSupport = jsonFormat(User.apply _, "id")
   }
 
-  case class UserList(_seq: User*) extends Iterable[User] with Equals {
-    private val delegatee = _seq.toList
+  case class UserList(users: List[User]) extends Iterable[User] with IterableLike[User, UserList] with Equals {
+    private val delegatee = users
     override val seq = delegatee.seq
+    def this(users: User*) = this(List(users: _*))
     def apply(n: Int): User = delegatee.apply(n)
-    def iterator: Iterator[User] = delegatee.iterator
+    override val iterator: Iterator[User] = delegatee.iterator
+    override def newBuilder: mutable.Builder[User, UserList] =
+      delegatee.genericBuilder.mapResult { users => UserList(users: _*) }
 
     override def hashCode(): Int = delegatee.hashCode
     override def canEqual(that: Any): Boolean = that.isInstanceOf[UserList]
@@ -68,6 +77,7 @@ object PusherModels extends PusherJsonSupport {
     }
   }
   object UserList {
+    def apply(users: User*): UserList = new UserList(users: _*)
     implicit object UserListJsonSupport extends JsonFormat[UserList] {
       def write(users: UserList): JsValue = {
         JsObject("users" -> JsArray(users.map(_.toJson).toVector))
