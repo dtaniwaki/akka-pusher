@@ -73,6 +73,11 @@ class PusherModelsSpec extends Specification
         }
       }
     }
+    "#this(seq: User*)" should {
+      "convert it to List" in {
+        new UserList(User("123")) === new UserList(List(User("123")))
+      }
+    }
     "#apply" should {
       "return the instance" in {
         val userList = UserList(User("foo"))
@@ -105,12 +110,13 @@ class PusherModelsSpec extends Specification
         id === "foo"
       }
     }
-    "#withFilter" should {
+    "#filter" should {
       "filter the values" in {
         val userList = UserList(User("foo"), User("bar"))
-        (userList withFilter { user =>
+        val updatedUserList = userList filter { user =>
           user.id == "foo"
-        }).map { case id => id } === List(User("foo"))
+        }
+        updatedUserList === UserList(User("foo"))
       }
     }
     "#equals" should {
@@ -160,6 +166,11 @@ class PusherModelsSpec extends Specification
         }
       }
     }
+    "#this(seq: (String, Channel)*)" should {
+      "convert it to Map" in {
+        new ChannelMap("s" -> Channel()) === new ChannelMap(Map("s" -> Channel()))
+      }
+    }
     "#apply" should {
       "return the instance" in {
         val channelMap = ChannelMap("foo" -> Channel())
@@ -203,13 +214,14 @@ class PusherModelsSpec extends Specification
         (name, channel) === ("foo", Channel())
       }
     }
-    "#withFilter" should {
+    "#filter" should {
       "filter the values" in {
         val channelMap = ChannelMap("foo" -> Channel(), "bar" -> Channel())
-        (channelMap withFilter {
+        val updatedChannelMap = channelMap filter {
           case (name, channel) =>
             name == "foo"
-        }).map { case (name, channel) => (name, channel) } === List(("foo", Channel()))
+        }
+        updatedChannelMap === ChannelMap(("foo", Channel()))
       }
     }
     "#equals" should {
