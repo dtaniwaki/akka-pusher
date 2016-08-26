@@ -3,27 +3,20 @@ organization := "com.github.dtaniwaki"
 name := "akka-pusher"
 
 scalaVersion := "2.11.7"
-crossScalaVersions := Seq("2.10.6", "2.11.7")
+crossScalaVersions := Seq("2.11.7")
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
 
-val akkaV = "2.3.14"
-val akkaHttpV = "2.0.1"
-val sprayJsonV = "1.3.2"
+val akkaV = "2.4.9"
 val specs2V = "3.6.4"
 
 val developmentDependencies = Seq(
-  "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
-  "com.typesafe.akka"   %%  "akka-http-core-experimental" % akkaHttpV,
-  "io.spray"            %%  "spray-json" % sprayJsonV,
-  "com.github.nscala-time" %% "nscala-time" % "2.2.0",
-  "org.slf4j"           %   "slf4j-api"     % "1.7.12"
-)
-val developmentDependencies_2_11 = Seq(
-  "net.ceedubs"                %% "ficus"         % "1.1.2"
-)
-val developmentDependencies_2_10 = Seq(
-  "net.ceedubs"                %% "ficus"             % "1.0.1"
+  "com.typesafe.akka"       %%  "akka-actor"                        % akkaV,
+  "com.typesafe.akka"       %%  "akka-http-core"                    % akkaV,
+  "com.typesafe.akka"       %%  "akka-http-spray-json-experimental" % akkaV,
+  "com.github.nscala-time"  %%  "nscala-time"                       % "2.2.0",
+  "org.slf4j"               %   "slf4j-api"                         % "1.7.12",
+  "net.ceedubs"             %%  "ficus"                             % "1.1.2"
 )
 val testDependencies = Seq(
   "com.typesafe.akka"   %%  "akka-testkit"  % akkaV % "test",
@@ -32,12 +25,7 @@ val testDependencies = Seq(
   "org.specs2"          %%  "specs2-matcher-extra" % specs2V % "test",
   "org.specs2"          %%  "specs2-mock"   % specs2V % "test"
 )
-libraryDependencies <++= (scalaVersion) {
-  case v if v.startsWith("2.10.") =>
-    developmentDependencies ++ developmentDependencies_2_10 ++ testDependencies
-  case v if v.startsWith("2.11.") =>
-    developmentDependencies ++ developmentDependencies_2_11 ++ testDependencies
-}
+libraryDependencies ++= developmentDependencies ++ testDependencies
 
 fork in Test := true
 parallelExecution in Test := true
