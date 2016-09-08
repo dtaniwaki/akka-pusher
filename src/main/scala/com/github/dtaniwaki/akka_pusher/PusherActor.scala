@@ -23,7 +23,16 @@ class PusherActor(
   }
 
   implicit val system = context.system
-  implicit val ec: ExecutionContext = system.dispatcher
+
+  implicit val ec: ExecutionContext = {
+    val config = system.settings.config
+    if (config.hasPath("pusher.dispatcher")) {
+      system.dispatchers.lookup("pusher.dispatcher")
+    } else {
+      system.dispatcher
+    }
+  }
+
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
   val batchSize = config.as[Option[Int]]("pusher.batchSize").getOrElse(10) // Undoc but just in case...
