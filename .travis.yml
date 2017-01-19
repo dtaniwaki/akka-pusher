@@ -6,15 +6,13 @@ cache:
     - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
 
 scala:
-  - 2.10.6
   - 2.11.7
 
 jdk:
   - oraclejdk8
 
 script:
-  - "[ \"$TRAVIS_SCALA_VERSION\" != \"2.10.6\" ] || sbt ++$TRAVIS_SCALA_VERSION clean test"
-  - "[ \"$TRAVIS_SCALA_VERSION\" == \"2.10.6\" ] || sbt ++$TRAVIS_SCALA_VERSION clean coverage test"
+  - "sbt clean coverage test"
 
 after_success:
   - pip install --user codecov && codecov
