@@ -23,7 +23,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{ Try, Success, Failure }
 
-class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
+class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"), ec: ExecutionContext)
     extends PusherValidator
     with PusherJsonSupport {
   private lazy val logger = LoggerFactory.getLogger(getClass)
@@ -41,9 +41,8 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   logger.debug(s"ssl.......... ${ssl}")
 
   implicit val materializer = ActorMaterializer()(system)
-  implicit val ec: ExecutionContext = system.dispatcher
   protected val pool: Flow[(HttpRequest, Int), (Try[HttpResponse], Int), Any] = if (ssl) {
-    Http(system).cachedHostConnectionPoolTls[Int](host)
+    Http(system).cachedHostConnectionPoolHttps[Int](host)
   } else {
     Http(system).cachedHostConnectionPool[Int](host)
   }
