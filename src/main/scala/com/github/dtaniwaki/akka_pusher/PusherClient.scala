@@ -35,6 +35,7 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   private lazy val logger = LoggerFactory.getLogger(getClass)
   private val defaultHeaders: List[HttpHeader] = List(headers.`User-Agent`(s"akka-pusher v${getClass.getPackage.getImplementationVersion}"))
 
+  // TODO adjust api-us2.pusher.com so the "us2" cluster identifier is on the settings
   val host: String = config.as[Option[String]]("pusher.host").getOrElse("api-us2.pusher.com").trim()
   val appId: String = config.getString("pusher.appId").trim()
   val key: String = config.getString("pusher.key").trim()
