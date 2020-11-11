@@ -1,4 +1,4 @@
-package com.mf.location.os.service.util.pusher
+package com.github.dtaniwaki.akka_pusher
 
 trait PusherValidator {
   private val maxBatchSize = 10

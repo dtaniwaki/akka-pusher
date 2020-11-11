@@ -1,4 +1,4 @@
-package com.mf.location.os.service.util.pusher
+package com.github.dtaniwaki.akka_pusher
 
 import com.github.nscala_time.time.Imports._
 import PusherEvents._

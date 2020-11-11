@@ -1,4 +1,4 @@
-package com.mf.location.os.service.util.pusher
+package com.github.dtaniwaki.akka_pusher
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -8,14 +8,14 @@ import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Flow, Sink, Source }
-import com.mf.location.os.service.util.pusher.PusherExceptions._
-import com.mf.location.os.service.util.pusher.PusherModels._
-import com.mf.location.os.service.util.pusher.Utils._
-import com.mf.location.os.service.util.pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
+import com.github.dtaniwaki.akka_pusher.PusherExceptions._
+import com.github.dtaniwaki.akka_pusher.PusherModels._
+import com.github.dtaniwaki.akka_pusher.Utils._
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import akka.http.scaladsl.model.Uri
-import com.mf.location.os.service.util.pusher.PusherClient.{ TriggerBody, TriggerBodySimple }
+import com.github.dtaniwaki.akka_pusher.PusherClient.{ TriggerBody, TriggerBodySimple }
 import org.joda.time.DateTimeUtils
 import org.slf4j.LoggerFactory
 import io.circe._

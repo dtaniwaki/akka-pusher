@@ -1,7 +1,7 @@
-package com.mf.location.os.service.util.pusher
+package com.github.dtaniwaki.akka_pusher
 
-import com.mf.location.os.service.util.pusher.PusherModels.{ ChannelData, PusherMsg }
-import com.mf.location.os.service.util.pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
+import com.github.dtaniwaki.akka_pusher.PusherModels.{ ChannelData, PusherMsg }
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
 import io.circe.Json
 
 object PusherMessages {

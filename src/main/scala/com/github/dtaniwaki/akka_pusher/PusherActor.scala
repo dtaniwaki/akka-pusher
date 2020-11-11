@@ -1,11 +1,11 @@
-package com.mf.location.os.service.util.pusher
+package com.github.dtaniwaki.akka_pusher
 
 import akka.actor._
 import akka.pattern.pipe
-import com.mf.location.os.service.util.pusher.PusherMessages._
-import com.mf.location.os.service.util.pusher.PusherMessages.TriggerMessage
+import com.github.dtaniwaki.akka_pusher.PusherMessages.{ AuthenticateMessage, BatchTriggerMessage, BatchTriggerTick, ChannelMessage, ChannelsMessage, TriggerMessage, UsersMessage, ValidateSignatureMessage }
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
+
 import scala.collection.mutable.Queue
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
