@@ -2,30 +2,39 @@ organization := "com.github.dtaniwaki"
 
 name := "akka-pusher"
 
-scalaVersion := "2.11.7"
-crossScalaVersions := Seq("2.11.7")
+scalaVersion := "2.13.1"
+crossScalaVersions := Seq("2.13.1")
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
 
-val akkaV = "2.4.9"
-val specs2V = "3.6.4"
+val akkaHttp = "10.2.1"
+val akka = "2.6.10"
+val specs2V = "4.10.5"
 
 val developmentDependencies = Seq(
-  "com.typesafe.akka"       %%  "akka-actor"                        % akkaV,
-  "com.typesafe.akka"       %%  "akka-http-core"                    % akkaV,
-  "com.typesafe.akka"       %%  "akka-http-spray-json-experimental" % akkaV,
-  "com.github.nscala-time"  %%  "nscala-time"                       % "2.2.0",
+  "com.typesafe.akka"       %%  "akka-actor"                        % akka,
+  "com.typesafe.akka"       %%  "akka-stream"                       % akka,
+  "com.typesafe.akka"       %%  "akka-http"                         % akkaHttp,
+  "com.github.nscala-time"  %%  "nscala-time"                       % "2.24.0",
   "org.slf4j"               %   "slf4j-api"                         % "1.7.12",
-  "net.ceedubs"             %%  "ficus"                             % "1.1.2"
+  "com.iheart"              %%  "ficus"                             % "1.5.0"
 )
 val testDependencies = Seq(
-  "com.typesafe.akka"   %%  "akka-testkit"  % akkaV % "test",
+  "com.typesafe.akka"   %%  "akka-testkit"  % akka % "test",
   "org.specs2"          %%  "specs2-core"   % specs2V % "test",
   "org.specs2"          %%  "specs2-matcher" % specs2V % "test",
   "org.specs2"          %%  "specs2-matcher-extra" % specs2V % "test",
   "org.specs2"          %%  "specs2-mock"   % specs2V % "test"
 )
 libraryDependencies ++= developmentDependencies ++ testDependencies
+
+val circeVersion = "0.12.3"
+
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-core",
+  "io.circe" %% "circe-generic",
+  "io.circe" %% "circe-parser"
+).map(_ % circeVersion)
 
 fork in Test := true
 parallelExecution in Test := true

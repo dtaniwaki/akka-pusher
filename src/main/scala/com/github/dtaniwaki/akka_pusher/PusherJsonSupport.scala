@@ -1,7 +1,5 @@
-package com.github.dtaniwaki.akka_pusher
-
-import spray.json.DefaultJsonProtocol
+package com.mf.location.os.service.util.pusher
 
 // Just prioritize the implicit conversions
-trait PusherJsonSupport extends DefaultJsonProtocol {
+trait CirceJsonSupport {
 }

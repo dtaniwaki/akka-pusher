@@ -1,4 +1,4 @@
-package com.github.dtaniwaki.akka_pusher.attributes
+package com.mf.location.os.service.util.pusher.attributes
 
 object PusherChannelAttributes extends Enumeration {
   val userCount = Value("user_count")

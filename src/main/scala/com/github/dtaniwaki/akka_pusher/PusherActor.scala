@@ -1,21 +1,22 @@
-package com.github.dtaniwaki.akka_pusher
+package com.mf.location.os.service.util.pusher
 
 import akka.actor._
 import akka.pattern.pipe
-import com.github.dtaniwaki.akka_pusher.PusherMessages._
+import com.mf.location.os.service.util.pusher.PusherMessages._
+import com.mf.location.os.service.util.pusher.PusherMessages.TriggerMessage
 import com.typesafe.config.{ Config, ConfigFactory }
+import net.ceedubs.ficus.Ficus._
 import scala.collection.mutable.Queue
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import org.slf4j.LoggerFactory
-import net.ceedubs.ficus.Ficus._
 
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 
 class PusherActor(
     config: Config,
-    private val batchTriggerQueue: Queue[TriggerMessage] = Queue[TriggerMessage]()) extends Actor with PusherJsonSupport {
+    private val batchTriggerQueue: Queue[TriggerMessage] = Queue[TriggerMessage]()) extends Actor {
 
   // NOTE: Define redundant constructor to avoid an error to create prop without arguments.
   def this() = {
@@ -45,47 +46,48 @@ class PusherActor(
 
   val pusher = new PusherClient()
 
-  override def receive: Receive = PartialFunction { message =>
-    val res = message match {
-      case trigger: TriggerMessage if batchTrigger =>
-        batchTriggerQueue.enqueue(trigger)
-        true
-      case triggers: Seq[_] if batchTrigger && triggers.forall(_.isInstanceOf[TriggerMessage]) =>
-        batchTriggerQueue.enqueue(triggers.map(_.asInstanceOf[TriggerMessage]): _*)
-        true
-      case TriggerMessage(channel, event, message, socketId) =>
-        pusher.trigger(channel, event, message, socketId)
-      case triggers: Seq[_] if triggers.forall(_.isInstanceOf[TriggerMessage]) =>
-        Future.sequence(triggers.map(_.asInstanceOf[TriggerMessage]).grouped(batchSize).map { triggers =>
-          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get))
-        })
-      case ChannelMessage(channel, attributes) =>
-        pusher.channel(channel, attributes)
-      case ChannelsMessage(prefixFilter, attributes) =>
-        pusher.channels(prefixFilter, attributes)
-      case UsersMessage(channel) =>
-        pusher.users(channel)
-      case AuthenticateMessage(channel, socketId, data) =>
-        pusher.authenticate(channel, socketId, data)
-      case ValidateSignatureMessage(key, signature, body) =>
-        pusher.validateSignature(key, signature, body)
-      case trigger: BatchTriggerMessage if batchTrigger =>
-        batchTriggerQueue.enqueue(TriggerMessage.tupled(BatchTriggerMessage.unapply(trigger).get))
-        true
-      case BatchTriggerTick() if batchTrigger =>
-        var n = 0
-        val triggers = batchTriggerQueue.dequeueAll { _ => n += 1; n <= batchSize }
-        if (triggers.nonEmpty) {
-          pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
-            case Success(_) => // Do Nothing
-            case Failure(e) => logger.warn(e.getMessage)
-          }
-          if (batchTriggerQueue.nonEmpty)
-            self ! BatchTriggerTick()
+  override def receive: Receive = {
+
+    case trigger: TriggerMessage if batchTrigger =>
+      batchTriggerQueue.enqueue(trigger)
+      true
+    case triggers: Seq[TriggerMessage] if batchTrigger && triggers.forall(_.isInstanceOf[TriggerMessage]) =>
+      batchTriggerQueue.enqueueAll(triggers)
+      true
+    case TriggerMessage(channel, event, message, socketId) =>
+      pusher.trigger(channel, event, message, socketId)
+    case triggers: Seq[_] if triggers.forall(_.isInstanceOf[TriggerMessage]) =>
+      Future.sequence(triggers.map(_.asInstanceOf[TriggerMessage]).grouped(batchSize).map { triggers =>
+        pusher.trigger(triggers.map(TriggerMessage.unapply(_).get))
+      })
+    case ChannelMessage(channel, attributes) =>
+      pusher.channel(channel, attributes)
+    case ChannelsMessage(prefixFilter, attributes) =>
+      pusher.channels(prefixFilter, attributes)
+    case UsersMessage(channel) =>
+      pusher.users(channel)
+    case AuthenticateMessage(channel, socketId, data) =>
+      pusher.authenticate(channel, socketId, data)
+    case ValidateSignatureMessage(key, signature, body) =>
+      pusher.validateSignature(key, signature, body)
+    case trigger: BatchTriggerMessage if batchTrigger =>
+      batchTriggerQueue.enqueue(TriggerMessage.tupled(BatchTriggerMessage.unapply(trigger).get))
+      true
+    case BatchTriggerTick() if batchTrigger =>
+      var n = 0
+      val triggers = batchTriggerQueue.dequeueAll { _ => n += 1; n <= batchSize }
+      if (triggers.nonEmpty) {
+        pusher.trigger(triggers.map(TriggerMessage.unapply(_).get)).map {
+          case Success(_) => // Do Nothing
+          case Failure(e) => logger.warn(e.getMessage)
         }
-        triggers.length
-      case _ =>
-    }
+        if (batchTriggerQueue.nonEmpty)
+          self ! BatchTriggerTick()
+      }
+      triggers.length
+    case _ =>
+
+    /*
     if (!sender.eq(system.deadLetters) && !sender.eq(ActorRef.noSender)) {
       res match {
         case future: Future[_] =>
@@ -94,7 +96,7 @@ class PusherActor(
           sender ! res
         case _ =>
       }
-    }
+    }*/
   }
 
   override def postStop(): Unit = {

@@ -1,6 +1,4 @@
-package com.github.dtaniwaki.akka_pusher
-
-import spray.json.JsonWriter
+package com.mf.location.os.service.util.pusher
 
 trait PusherValidator {
   private val maxBatchSize = 10

@@ -1,20 +1,20 @@
-package com.github.dtaniwaki.akka_pusher
+package com.mf.location.os.service.util.pusher
 
-import com.github.dtaniwaki.akka_pusher.PusherModels.ChannelData
-import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, PusherChannelAttributes }
-import spray.json.JsValue
+import com.mf.location.os.service.util.pusher.PusherModels.{ ChannelData, PusherMsg }
+import com.mf.location.os.service.util.pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
+import io.circe.Json
 
 object PusherMessages {
   case class TriggerMessage(
     channel: String,
     event: String,
-    message: JsValue,
+    message: String,
     socketId: Option[String] = None)
   @deprecated("TriggerMessage will be used for BatchTriggerMessage. It will be removed in v0.3", "0.2.3")
   case class BatchTriggerMessage(
     channel: String,
     event: String,
-    message: JsValue,
+    message: String,
     socketId: Option[String] = None)
   case class ChannelMessage(
     channelName: String,
@@ -39,7 +39,7 @@ object PusherMessages {
   case class AuthenticateMessage(
     socketId: String,
     channel: String,
-    data: Option[ChannelData[JsValue]] = None)
+    data: Option[ChannelData[PusherMsg]] = None)
   case class ValidateSignatureMessage(
     key: String,
     signature: String,

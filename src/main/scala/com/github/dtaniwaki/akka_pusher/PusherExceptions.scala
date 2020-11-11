@@ -1,4 +1,4 @@
-package com.github.dtaniwaki.akka_pusher
+package com.mf.location.os.service.util.pusher
 
 object PusherExceptions {
   class PusherException(message: String) extends RuntimeException(message)
