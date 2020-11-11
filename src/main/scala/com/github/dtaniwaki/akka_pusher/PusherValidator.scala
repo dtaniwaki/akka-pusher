@@ -1,7 +1,5 @@
 package com.github.dtaniwaki.akka_pusher
 
-import spray.json.JsonWriter
-
 trait PusherValidator {
   private val maxBatchSize = 10
   private val channelPattern = """^([A-Za-z0-9_\-=@,.;]+)$""".r

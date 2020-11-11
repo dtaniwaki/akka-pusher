@@ -11,25 +11,32 @@ import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.github.dtaniwaki.akka_pusher.PusherExceptions._
 import com.github.dtaniwaki.akka_pusher.PusherModels._
 import com.github.dtaniwaki.akka_pusher.Utils._
-import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelsAttributes, PusherChannelAttributes }
+import com.github.dtaniwaki.akka_pusher.attributes.{ PusherChannelAttributes, PusherChannelsAttributes }
 import com.typesafe.config.{ Config, ConfigFactory }
 import net.ceedubs.ficus.Ficus._
 import akka.http.scaladsl.model.Uri
+import com.github.dtaniwaki.akka_pusher.PusherClient.{ TriggerBody, TriggerBodySimple }
 import org.joda.time.DateTimeUtils
 import org.slf4j.LoggerFactory
-import spray.json._
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
+import io.circe.generic.semiauto._
+
+import scala.collection.MapView
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Try, Success, Failure }
+import scala.util.{ Failure, Success, Try }
 
 class PusherClient(config: Config = ConfigFactory.load())(implicit val system: ActorSystem = ActorSystem("pusher-client"))
-    extends PusherValidator
-    with PusherJsonSupport {
+    extends PusherValidator {
   private lazy val logger = LoggerFactory.getLogger(getClass)
   private val defaultHeaders: List[HttpHeader] = List(headers.`User-Agent`(s"akka-pusher v${getClass.getPackage.getImplementationVersion}"))
 
-  val host: String = config.as[Option[String]]("pusher.host").getOrElse("api.pusherapp.com").trim()
+  // TODO adjust api-us2.pusher.com so the "us2" cluster identifier is on the settings
+  val host: String = config.as[Option[String]]("pusher.host").getOrElse("api-us2.pusher.com").trim()
   val appId: String = config.getString("pusher.appId").trim()
   val key: String = config.getString("pusher.key").trim()
   val secret: String = config.getString("pusher.secret").trim()
@@ -53,17 +60,13 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     "http"
   }
 
-  def trigger[T: JsonWriter](channels: Seq[String], event: String, data: T, socketId: Option[String] = None): Future[Try[Result]] = {
+  def trigger(channels: Seq[String], event: String, data: String, socketId: Option[String] = None): Future[Try[Result]] = {
+
     validateChannel(channels)
     validateSocketId(socketId)
     var uri = generateUri(s"/apps/$appId/events")
 
-    val body = JsObject(Seq(
-      "data" -> JsString(data.toJson.compactPrint),
-      "name" -> JsString(event),
-      "channels" -> JsArray(channels.map(JsString.apply).toVector),
-      "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
-    ).filter(_._2 != JsNull): _*).compactPrint
+    val body = TriggerBodySimple(data, event, channels).asJson.toString()
 
     uri = signUri("POST", uri, Some(body))
 
@@ -72,21 +75,17 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
       new Result(_)
     })
   }
-  def trigger[T: JsonWriter](channel: String, event: String, data: T): Future[Try[Result]] = trigger(channel, event, data, None)
-  def trigger[T: JsonWriter](channel: String, event: String, data: T, socketId: Option[String]): Future[Try[Result]] = trigger(Seq(channel), event, data, socketId)
-  def trigger[T: JsonWriter](triggers: Seq[(String, String, T, Option[String])]): Future[Try[Result]] = {
+  def trigger(channel: String, event: String, data: String): Future[Try[Result]] = trigger(channel, event, data, None)
+  def trigger(channel: String, event: String, data: String, socketId: Option[String]): Future[Try[Result]] = trigger(Seq(channel), event, data, socketId)
+  def trigger(triggers: Seq[(String, String, String, Option[String])]): Future[Try[Result]] = {
     validateTriggers(triggers)
     var uri = generateUri(s"/apps/$appId/batch_events")
 
-    val body = JsObject("batch" -> JsArray(triggers.map {
+    val body: String = triggers.collect {
       case (channel, event, data, socketId) =>
-        JsObject(Seq(
-          "data" -> JsString(data.toJson.compactPrint),
-          "name" -> JsString(event),
-          "channel" -> JsString(channel),
-          "socket_id" -> socketId.map(JsString(_)).getOrElse(JsNull)
-        ).filter(_._2 != JsNull): _*)
-    }.toVector)).compactPrint
+        TriggerBodySimple(data, event, Seq(channel))
+      //TriggerBody(data, event, Seq(channel), socketId)
+    }.asJson.toString()
 
     uri = signUri("POST", uri, Some(body))
     request(method = POST, uri = uri.toString, entity = HttpEntity(ContentType(`application/json`), body)).map(_.map { res =>
@@ -101,11 +100,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
 
     val params = Map(
       "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
-    ).filter(_._2.isDefined).mapValues(_.get)
+    ).filter(_._2.isDefined).view.mapValues(_.get).toMap
 
     uri = signUri("GET", uri.withQuery(Uri.Query(params)))
-
-    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[Channel]))
+    request(method = GET, uri = uri.toString).map(_.map(decode[Channel](_).getOrElse(Channel(None, None, None))))
   }
   @deprecated("Set the attributes without option and make it PusherChannelAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
   def channel(channelName: String, attributes: Option[Seq[String]]): Future[Try[Channel]] = {
@@ -118,11 +116,10 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     val params = Map(
       "filter_by_prefix" -> Some(prefixFilter),
       "info" -> (if (attributes.nonEmpty) Some(attributes.mkString(",")) else None)
-    ).filter(_._2.isDefined).mapValues(_.get)
+    ).filter(_._2.isDefined).view.mapValues(_.get).toMap
 
     uri = signUri("GET", uri.withQuery(Uri.Query(params)))
-
-    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[ChannelMap]))
+    request(method = GET, uri = uri.toString).map(_.map(decode[ChannelMap](_).getOrElse(ChannelMap(Map[String, Channel]()))))
   }
   @deprecated("Set the attributes without option and make it PusherChannelsAttributes enumeration sequence instead. It will be removed in v0.3", "0.2.3")
   def channels(prefixFilter: String, attributes: Option[Seq[String]]): Future[Try[ChannelMap]] = {
@@ -133,12 +130,11 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
     validateChannel(channel)
     var uri = generateUri(s"/apps/$appId/channels/$channel/users")
     uri = signUri("GET", uri)
-
-    request(method = GET, uri = uri.toString).map(_.map(_.parseJson.convertTo[UserList]))
+    request(method = GET, uri = uri.toString).map(_.map(decode[UserList](_).getOrElse(UserList(Nil))))
   }
 
-  def authenticate[T: JsonFormat](channel: String, socketId: String, data: Option[ChannelData[T]] = Option.empty[ChannelData[String]]): AuthenticatedParams = {
-    val serializedData = data.map(_.toJson.compactPrint)
+  def authenticate(channel: String, socketId: String, data: Option[ChannelData[PusherMsg]] = Option.empty[ChannelData[PusherMsg]]): AuthenticatedParams = {
+    val serializedData = data.map(_.asJson.toString)
     val signingStrings = serializedData.foldLeft(List(socketId, channel))(_ :+ _)
     AuthenticatedParams(s"$key:${signature(signingStrings.mkString(":"))}", serializedData)
   }
@@ -148,26 +144,29 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   }
 
   private def request(method: HttpMethod, uri: String, entity: RequestEntity = HttpEntity.Empty): Future[Try[String]] = {
-    Source.single(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders), 0)
+    val res = Source.single(HttpRequest(method = method, uri = uri, entity = entity, headers = defaultHeaders), 0)
       .via(pool)
       .runWith(Sink.head)
-      .flatMap {
-        case (Success(response), _) =>
-          response.entity.withContentType(ContentTypes.`application/json`)
-            .toStrict(5 seconds)
-            .map(_.data.decodeString(response.entity.contentType.charsetOption.map(_.value).getOrElse("UTF8")))
-            .map { body =>
-              response.status match {
-                case StatusCodes.OK           => Success(body)
-                case StatusCodes.BadRequest   => Failure(new BadRequest(body))
-                case StatusCodes.Unauthorized => Failure(new Unauthorized(body))
-                case StatusCodes.Forbidden    => Failure(new Forbidden(body))
-                case _                        => Failure(new PusherException(body))
-              }
+
+    res.flatMap {
+      case (Success(response), _) =>
+        response.entity.withContentType(ContentTypes.`application/json`)
+          .toStrict(5 seconds)
+          .map(_.data.decodeString(response.entity.contentType.charsetOption.map(_.value).getOrElse("UTF8")))
+          .map { body =>
+            response.status match {
+              case StatusCodes.OK           => Success(body)
+              case StatusCodes.BadRequest   => Failure(new BadRequest(body))
+              case StatusCodes.Unauthorized => Failure(new Unauthorized(body))
+              case StatusCodes.Forbidden    => Failure(new Forbidden(body))
+              case _                        => Failure(new PusherException(body))
             }
-        case _ =>
-          Future(Failure(new PusherException("Pusher request failed")))
-      }
+          }
+      case x =>
+        Future(Failure(new PusherException("Pusher request failed")))
+      case _ =>
+        Future(Failure(new PusherException("Pusher request failed")))
+    }
   }
 
   private def generateUri(path: String): Uri = {
@@ -198,4 +197,11 @@ class PusherClient(config: Config = ConfigFactory.load())(implicit val system: A
   def shutdown(): Unit = {
     Http(system).shutdownAllConnectionPools()
   }
+}
+
+object PusherClient {
+
+  case class TriggerBody(data: String, name: String, channels: Seq[String], socket_id: Option[String])
+  case class TriggerBodySimple(data: String, name: String, channels: Seq[String])
+
 }
